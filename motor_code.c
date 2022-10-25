@@ -30,14 +30,8 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 /*******************************************************************************
- * MSP432 Timer_A - Variable PWM
- *
- * Description: In this example, the Timer_A module is used to create a precision
- * PWM with an adjustable duty cycle. The PWM initial period is 80 ms and is
- * output on P2.4. The initial duty cycle of the PWM is 10%, however when the
- * button is pressed on P1.1 the duty cycle is sequentially increased by 10%.
- * Once the duty cycle reaches 90%, the duty cycle is reset to 10% on the
- * following button press.
+
+
  *
  *                MSP432P401
  *             ------------------
@@ -53,17 +47,21 @@
  *******************************************************************************/
 /* DriverLib Includes */
 #include <driverlib.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stdbool.h>
+
 
 /* Timer_A PWM Configuration Parameter */
 Timer_A_PWMConfig pwmLConfig =
 {
-        TIMER_A_CLOCKSOURCE_SMCLK, // SMCLK is 3MHz, ACLK is 16KHz
-        TIMER_A_CLOCKSOURCE_DIVIDER_24, // 30000000 / 24 = 125000Hz
-        10000, // 1/125000 = 0.000008 second per tick = 8 microsecond per tick
-        // 0.000008 * 10000 = 0.08 second = 80 ms
+        TIMER_A_CLOCKSOURCE_SMCLK,
+        TIMER_A_CLOCKSOURCE_DIVIDER_24,
+        10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        1000 // 10% duty cycle
+        2000
 };
 
 Timer_A_PWMConfig pwmRConfig =
@@ -73,47 +71,103 @@ Timer_A_PWMConfig pwmRConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        1000
+        1250
 };
 
+const Timer_A_UpModeConfig pidTimer =
+{
+        TIMER_A_CLOCKSOURCE_ACLK, //32 KHz
+        TIMER_A_CLOCKSOURCE_DIVIDER_16, //32000 / 16 = 2000
+        1000, // (1/2000) * 1000 = 0.5 sec
+        TIMER_A_TAIE_INTERRUPT_DISABLE,
+        TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
+        TIMER_A_DO_CLEAR
+};
+
+const eUSCI_UART_Config uartConfig =
+{
+        EUSCI_A_UART_CLOCKSOURCE_SMCLK,                 // SMCLK Clock Source
+        1,                                             // BRDIV = 78
+        10,                                              // UCxBRF = 2
+        0,                                              // UCxBRS = 0
+        EUSCI_A_UART_ODD_PARITY,                        // ODD Parity
+        EUSCI_A_UART_LSB_FIRST,                         // LSB First
+        EUSCI_A_UART_ONE_STOP_BIT,                      // One stop bit
+        EUSCI_A_UART_MODE,                              // UART mode
+        EUSCI_A_UART_OVERSAMPLING_BAUDRATE_GENERATION,  // Oversampling
+};
+
+int getNumNotch(bool add ,char side, bool reset);
+int presetNotch(bool set, int notches);
+void uPrintf(unsigned char * TxArray);
+void carStop();
 
 int main(void)
 {
     /* Halting the watchdog */
     MAP_WDT_A_holdTimer();
 
+    /* Selecting P1.2 and P1.3 in UART mode */
+   GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+
+   /* Configuring UART Module */
+   UART_initModule(EUSCI_A0_BASE, &uartConfig);
+
+   /* Enable UART module */
+   UART_enableModule(EUSCI_A0_BASE);
+
+   uPrintf("program start \n\r");
+
     /* Configuring P4.4 and P4.5 as Output. P2.4 as peripheral output for PWM and P1.1 for button interrupt */
     //left
-    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN4); //Set PORT 4.4 and PORT 4.5 as output pins
+    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN4);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN5);
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PORT 4.5 Low = Forward, PORT 4.5 High = reverse
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4); // PORT 4.4 High = Forward, PORT 4.4 Low = reverse
-    // If both PORT 4.4 and PORT 4.5 are set to low = the PWM motor will stop
-    // Both PORT 4.4 and PORT 4.5 has to be set in the right settings for the PWM motor to trigger either forward or reverse
-    // If one of the PORT is not set correctly, it will not run
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4); // PIN5 High = reverse, PIN4 High = Forward
+    // If both PIN4 and PIN5 are set to low = the PWM motor will stop
+    // Both PIN4 and PIN5 has to be set in the right settings for the PWM motor to trigger either forward or reverse
+    // If one of the PIN is not set correctly, it will not run
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN4, GPIO_PRIMARY_MODULE_FUNCTION);
-    //To setup the motor driver board as output
-    Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig); // Generate PWM left motor based on config
+    Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
 
     //right
-    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0); //Set PORT 4.0 and PORT 4.2 to be output pins
+    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN2);
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2); // PORT 4.2 Low = Forward, PORT 4.2 High = Reverse
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0); // PORT 4.0 High = Forward, PORT 4.0 Low = Reverse
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P5, GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
     Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
 
 
-    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1); // Set switch PORT 1.1 to be input PIN
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1);
     GPIO_clearInterruptFlag(GPIO_PORT_P1, GPIO_PIN1);
     GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN1);
 
     /* Configuring Timer_A to have a period of approximately 80ms and an initial duty cycle of 10% of that (1000 ticks)  */
 
+    // Setting up interrupt for Left Encoder (P3.3)
+    GPIO_clearInterruptFlag(GPIO_PORT_P3, GPIO_PIN3);
+    GPIO_enableInterrupt(GPIO_PORT_P3, GPIO_PIN3);
+    Interrupt_enableInterrupt(INT_PORT3);
+    // Setting up interrupt for Right Encoder (P2.5)
+    GPIO_clearInterruptFlag(GPIO_PORT_P2, GPIO_PIN5);
+    GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN5);
+    Interrupt_enableInterrupt(INT_PORT2);
+
+    // Timer Interrupt
+    Timer_A_configureUpMode(TIMER_A1_BASE, &pidTimer);
+    Interrupt_enableInterrupt(INT_TA1_0);
+    Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
+
     /* Enabling interrupts and starting the watchdog timer */
     Interrupt_enableInterrupt(INT_PORT1);
     Interrupt_enableSleepOnIsrExit();
     Interrupt_enableMaster();
+
+    //set notch speed
+    presetNotch(true,5);
+
+
 
     /* Sleeping when not in use */
     while (1)
@@ -128,23 +182,153 @@ void PORT1_IRQHandler(void)
     uint32_t status = MAP_GPIO_getEnabledInterruptStatus(GPIO_PORT_P1);
     GPIO_clearInterruptFlag(GPIO_PORT_P1, status);
 
-    if (status & GPIO_PIN1) // When Switch PIN 1.1 is pressed
+    if (status & GPIO_PIN1)
     {
-        if(pwmRConfig.dutyCycle == 7000) // If the duty cycle of right motor is 7000
-            pwmRConfig.dutyCycle = 1000; // Set duty cycle to 1000
-        else
-            pwmRConfig.dutyCycle += 1000; // If the duty cycle is not 7000, increment it by 1000
-
-        if(pwmLConfig.dutyCycle == 7000) // if the duty cycle of left motor is 7000
-            pwmLConfig.dutyCycle = 1000; // Set duty cycle to 1000
-        else
-            pwmLConfig.dutyCycle += 1000; // If the duty cycle is not 7000, increment it by 1000
-
-        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig); // Save the new config changes for left motor
-        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig); // Save the new conig changes for the right motor
+//        if(pwmRConfig.dutyCycle == 7000)
+//            pwmRConfig.dutyCycle = 1000;
+//        else
+//            pwmRConfig.dutyCycle += 1000;
+//
+//        if(pwmLConfig.dutyCycle == 7000)
+//            pwmLConfig.dutyCycle = 1000;
+//        else
+//            pwmLConfig.dutyCycle += 1000;
+//
+//        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+//        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+        carStop();
 
 
     }
+}
+
+
+
+//ISR for when the encoder detected one notch
+void PORT2_IRQHandler(void) //This function will be triggered if there is an interrupt occurred
+{
+    uint32_t statusL;
+
+    statusL = GPIO_getEnabledInterruptStatus(GPIO_PORT_P2); //to receive the interrupt status and stored in the status local variable
+    getNumNotch(true,'R',false); //call getNumNotch() to increment the number of notch by 1 for the right wheel
+    GPIO_clearInterruptFlag(GPIO_PORT_P2, statusL); //Clear interrupt flag for Port 2
+}
+
+void PORT3_IRQHandler(void) //This function will be triggered if there is an interrupt occurred
+{
+    uint32_t statusR;
+
+    statusR = GPIO_getEnabledInterruptStatus(GPIO_PORT_P3); //to receive the interrupt status and stored in the status local variable
+    getNumNotch(true,'L',false); //call getNumNotch() to increment the number of notch by 1 for the left wheel
+    GPIO_clearInterruptFlag(GPIO_PORT_P3, statusR); //Clear interrupt flag for Port 3
+}
+
+void TA1_0_IRQHandler(void)
+{
+    int presetNumNotch = presetNotch(false, 0);
+    int notchL = getNumNotch(false, 'L', true);
+    int notchR = getNumNotch(false, 'R', true);
+    int increment = 100;
+
+    int diffL = notchL- presetNumNotch; //(Number of notches for the left wheel) - the preset number
+    int diffR = notchR - presetNumNotch; //(Number of notches for the right wheel) - the preset number
+    unsigned char buffer[33] = "";
+    uPrintf("notchL = ");
+    sprintf(buffer,"%d",notchL);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("notchR = ");
+    sprintf(buffer,"%d",notchR);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("diffL = ");
+    sprintf(buffer,"%d",diffL);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("diffR = ");
+    sprintf(buffer,"%d",diffR);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+
+    if(diffL > 1) //If the number of notches on the left wheel is greater than the preset number by more than or equals to 3
+    {
+        pwmLConfig.dutyCycle -= increment; //Decrease the duty cycle of the left wheel
+        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+    }
+    if(diffR > 1) //If the number of notches on the right wheel is greater than the preset number by more than or equals to 1
+    {
+        pwmRConfig.dutyCycle -= increment; //Decrease the duty cycle of the right wheel
+        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+    }
+    if(diffL < 1) //If the number of notches on the left wheel is lower than the preset number by less than or equals to 1
+    {
+        pwmLConfig.dutyCycle += increment; //Increase the duty cycle of the left wheel
+        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+    }
+    if(diffR < 1) //If the number of notches on the right wheel is lower than the preset number by less than or equals to 3
+    {
+        pwmRConfig.dutyCycle += 100; //Increase the duty cycle of the right wheel
+        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+    }
+
+    Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
+
+}
+
+
+int getNumNotch(bool add, char side, bool reset)
+{
+    static int numNotchL = 0; //Get the number of notches from the left wheel
+    static int numNotchR = 0; //Get the number of notches from the right wheel
+    int tempstoreL = 0; //Temporarily store the number of notches for the left wheel (Will remove this var later)
+    int tempstoreR = 0;
+
+    if (side == 'L' && add == true) //If add is true and side is L
+    {
+        numNotchL++; //Increment the number of notches for the left wheel by 1
+    }
+    else if (side == 'R' && add == true) //If add is true and side is R
+    {
+        numNotchR++; //Increment the number of notches for the right wheel by 1
+    }
+    else if (side == 'L' && add == false) //If add is false and the side is L
+    {
+
+        if(reset) //If reset is true
+        {
+            tempstoreL = numNotchL;
+            numNotchL = 0; //Reset the number of notches for the left wheel to 0
+            return tempstoreL;
+        }
+        return numNotchL;
+    }
+    else if (side == 'R' && add == false)
+    {
+        if(reset)
+        {
+            tempstoreR = numNotchR;
+            numNotchR = 0; //Reset the number of notches for the right wheel to 0
+            return tempstoreR;
+        }
+        return numNotchR;
+    }
+
+
+    return 0;
+}
+
+int presetNotch(bool set, int notches)
+{
+    static int presetNumNotch = 0; //Set the number of notch to 0
+    if(set) //If set is true
+    {
+        presetNumNotch = notches; //Set the preset number with the function argument 'notches'
+    }
+    else
+    {
+        return presetNumNotch; //If false, just return the value
+    }
+    return 0;
 }
 
 void carForward()
@@ -189,4 +373,14 @@ void carStop()
 
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0); // PIN5 Low = Forward, PIN4 Low = reverse
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
+}
+
+void uPrintf(unsigned char * TxArray)
+{
+    unsigned short i = 0;
+    while(*(TxArray+i))
+    {
+        UART_transmitData(EUSCI_A0_BASE, *(TxArray+i));  // Write the character at the location specified by pointer
+        i++;                                             // Increment pointer to point to the next character
+    }
 }
