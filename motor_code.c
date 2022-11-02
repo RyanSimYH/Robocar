@@ -61,7 +61,7 @@ Timer_A_PWMConfig pwmLConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        2000
+        4000
 };
 
 Timer_A_PWMConfig pwmRConfig =
@@ -71,14 +71,14 @@ Timer_A_PWMConfig pwmRConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        1750
+        4000
 };
 
 const Timer_A_UpModeConfig pidTimer =
 {
         TIMER_A_CLOCKSOURCE_ACLK, //32 KHz
         TIMER_A_CLOCKSOURCE_DIVIDER_16, //32000 / 16 = 2000
-        2000, // (1/2000) * 2000 = 1 sec
+        2000, // (1/2000) * 1000 = 0.5 sec
         TIMER_A_TAIE_INTERRUPT_DISABLE,
         TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE,
         TIMER_A_DO_CLEAR
@@ -119,10 +119,10 @@ int main(void)
    /* Enable UART module */
    UART_enableModule(EUSCI_A0_BASE);
 
-   uPrintf("Program Start \n\r");
+   uPrintf("program start \n\r");
 
-    /* Configuring P4.4 and P4.5 as Output. P2.4 as peripheral output for PWM */
-    //Left motor
+    /* Configuring P4.4 and P4.5 as Output. P2.4 as peripheral output for PWM and P1.1 for button interrupt */
+    //left
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN4);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN5);
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
@@ -133,7 +133,7 @@ int main(void)
     GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P2, GPIO_PIN4, GPIO_PRIMARY_MODULE_FUNCTION);
     Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
 
-    //Right motor
+    //right
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN0);
     GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_PIN2);
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
@@ -142,7 +142,6 @@ int main(void)
     Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
 
 
-    //Set P1.1 and P1.4 as button interrupts
     GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P1, GPIO_PIN1);
     GPIO_clearInterruptFlag(GPIO_PORT_P1, GPIO_PIN1);
     GPIO_enableInterrupt(GPIO_PORT_P1, GPIO_PIN1);
@@ -171,8 +170,8 @@ int main(void)
     Interrupt_enableSleepOnIsrExit();
     Interrupt_enableMaster();
 
-    //Set notch speed to be 3 notches per second
-    presetNotch(true, 3);
+    //set notch speed
+    presetNotch(true,3);
 
 
 
@@ -203,9 +202,8 @@ void PORT1_IRQHandler(void)
 //
 //        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
 //        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
-
-        Timer_A_stopTimer(TIMER_A1_BASE); //Stop the timer
-        carStop(); //Stop the car
+        Timer_A_stopTimer(TIMER_A1_BASE);
+        carStop();
         unsigned char buffer[33] = "";
         uPrintf("notchL = ");
         sprintf(buffer,"%d",getNumNotch(false, 'L', true));
@@ -222,15 +220,15 @@ void PORT1_IRQHandler(void)
     {
         volatile uint32_t ii = 0;
         carStop();
-        getNumNotch(false, 'L', true); //Get the number of notches from the left encoder
-        getNumNotch(false, 'R', true); //Get the number of notches from the right encoder
-        Timer_A_stopTimer(TIMER_A1_BASE); //Stop the timer
-        pwmLConfig.dutyCycle = 4000; //Set the duty cycle of the left motor to be 4000
-        pwmRConfig.dutyCycle = 4000; //Set the duty cycle of the right motor to be 4000
+        getNumNotch(false, 'L', true);
+        getNumNotch(false, 'R', true);
+        Timer_A_stopTimer(TIMER_A1_BASE);
+        pwmLConfig.dutyCycle = 4000;
+        pwmRConfig.dutyCycle = 4000;
 
-        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig); //Apply the new PWM config for the left motor
-        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig); //Apply the new PWM config for the right motor
-        carRight(); //Car to turn right (left wheel forward, right wheel reverse)
+        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+        carRight();
     }
 }
 
@@ -242,15 +240,15 @@ void PORT2_IRQHandler(void) //This function will be triggered if there is an int
     uint32_t statusR;
     static int rightNotch = 0;
     statusR = GPIO_getEnabledInterruptStatus(GPIO_PORT_P2); //to receive the interrupt status and stored in the status local variable
-    getNumNotch(true, 'R', false); //call getNumNotch() to increment the number of notch by 1 for the right wheel
-    if (turnCheck(false, 'A') == 'R') //If this returns 'R', it means that carRight() function has been called
+    getNumNotch(true,'R',false); //call getNumNotch() to increment the number of notch by 1 for the right wheel
+    if(turnCheck(false,'A')=='R')
         {
-            rightNotch++; //Increment the number of notches from the right encoder
-            if (rightNotch == 12) //If the number of notches from the right encoder reaches 12
+            rightNotch++;
+            if(rightNotch == 12)
             {
-                carStop(); //Stop the car as the car is estimated to have already turned 90 degrees right
-                turnCheck(true, 'A'); //Set the direction of the car to be straight
-                rightNotch = 0; //Reset the notch value
+                carStop();
+                turnCheck(true,'A');
+                rightNotch = 0;
             }
         }
     GPIO_clearInterruptFlag(GPIO_PORT_P2, statusR); //Clear interrupt flag for Port 2
@@ -262,14 +260,14 @@ void PORT3_IRQHandler(void) //This function will be triggered if there is an int
     static int leftNotch = 0;
     statusL = GPIO_getEnabledInterruptStatus(GPIO_PORT_P3); //to receive the interrupt status and stored in the status local variable
     getNumNotch(true,'L',false); //call getNumNotch() to increment the number of notch by 1 for the left wheel
-    if(turnCheck(false, 'A') == 'L') //If this returns 'L', it means that the carLeft() function has been called
+    if(turnCheck(false,'A')=='L')
         {
-            leftNotch++; //Increment the number of notches from the left encoder
-            if(leftNotch == 12) //If the number of notches from the left encoder reaches 12
+            leftNotch++;
+            if(leftNotch == 12)
             {
-                carStop(); //Stop the car as the car is estimated to have already turned 90 degrees left
-                turnCheck(true,'A'); //Set the direction of the car to be straight
-                leftNotch = 0; //Reset the notch value
+                carStop();
+                turnCheck(true,'A');
+                leftNotch=0;
             }
         }
     GPIO_clearInterruptFlag(GPIO_PORT_P3, statusL); //Clear interrupt flag for Port 3
@@ -277,66 +275,123 @@ void PORT3_IRQHandler(void) //This function will be triggered if there is an int
 
 void TA1_0_IRQHandler(void)
 {
-    static int numSample = 0; //This is to let the car have its initial spin up before starting to sample the number of notches
+    static int numSample = 0;
     int presetNumNotch = presetNotch(false, 0);
     int notchL = getNumNotch(false, 'L', true);
     int notchR = getNumNotch(false, 'R', true);
     int increment = 100;
+    float perL=1;
+    float perR=1;
+    float dcL;
+    float dcR;
 
     int diffL = notchL- presetNumNotch; //(Number of notches for the left wheel) - the preset number
     int diffR = notchR - presetNumNotch; //(Number of notches for the right wheel) - the preset number
+    if(notchL == 0)
+    {
+        perL = presetNumNotch/1;
+    }
+    else
+    {
+        perL = presetNumNotch/notchL;
+    }
+    if(notchR == 0)
+    {
+        perR = presetNumNotch/1;
+    }
+    else
+    {
+        perR = presetNumNotch/notchR;
+    }
+
     unsigned char buffer[33] = "";
-//    uPrintf("notchL = ");
-//    sprintf(buffer,"%d",notchL);
-//    uPrintf(buffer);
-//    uPrintf("\n\r");
-//    uPrintf("notchR = ");
-//    sprintf(buffer,"%d",notchR);
-//    uPrintf(buffer);
-//    uPrintf("\n\r");
-    uPrintf("DC L = "); //Print the duty cycle value of the left motor
+    uPrintf("notchL = ");
+    sprintf(buffer,"%d",notchL);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("notchR = ");
+    sprintf(buffer,"%d",notchR);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("DC L = ");
     sprintf(buffer,"%d",pwmLConfig.dutyCycle);
     uPrintf(buffer);
     uPrintf("\n\r");
-    uPrintf("DC R = "); //Print the duty cycle value of the right motor
+    uPrintf("DC R = ");
     sprintf(buffer,"%d",pwmRConfig.dutyCycle);
     uPrintf(buffer);
     uPrintf("\n\r");
-    uPrintf("diffL = "); //Print the difference of number of notches between the left encoder and the predefined notches
+    uPrintf("diffL = ");
     sprintf(buffer,"%d",diffL);
     uPrintf(buffer);
     uPrintf("\n\r");
-    uPrintf("diffR = "); //Print the difference of number of notches between the right encoder and the predefined notches
+    uPrintf("diffR = ");
     sprintf(buffer,"%d",diffR);
     uPrintf(buffer);
     uPrintf("\n\r");
+    uPrintf("perL = ");
+    sprintf(buffer,"%f",perL);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("perR = ");
+    sprintf(buffer,"%f",perR);
+    uPrintf(buffer);
+    uPrintf("\n\r");
 
-    if (numSample > 2) { //Will only run the following if statements after the initial 2 interrupts
-        if(diffL >= 1) //If the number of notches on the left wheel is greater than the preset number by more than or equals to 1
+
+
+    if (numSample >2) {
+//        if(diffL)
+//        {
+//            dcL = pwmLConfig.dutyCycle;
+//            dcL*=perL;
+//            if(dcL < 2000)
+//            {
+//                dcL = 2000;
+//            }
+//            pwmLConfig.dutyCycle = dcL;
+//            Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+//
+//        }
+//        if(diffR)
+//        {
+//            dcR = pwmRConfig.dutyCycle;
+//            dcR*=perR;
+//            if(dcR < 2000)
+//            {
+//                dcR = 2000;
+//            }
+//            pwmRConfig.dutyCycle = dcR;
+//            Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+//
+//        }
+        if(diffL >= 1) //If the number of notches on the left wheel is greater than the preset number by more than or equals to 3
         {
-            pwmLConfig.dutyCycle -= increment; //Decrease the duty cycle of the left wheel
+            pwmLConfig.dutyCycle-=increment; //Decrease the duty cycle of the left wheel
             Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
         }
         if(diffR >= 1) //If the number of notches on the right wheel is greater than the preset number by more than or equals to 1
         {
-            pwmRConfig.dutyCycle -= increment; //Decrease the duty cycle of the right wheel
+            pwmRConfig.dutyCycle-=increment; //Decrease the duty cycle of the right wheel
             Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
         }
         if(diffL <= 1) //If the number of notches on the left wheel is lower than the preset number by less than or equals to 1
         {
-            pwmLConfig.dutyCycle += increment; //Increase the duty cycle of the left wheel
+            pwmLConfig.dutyCycle+=increment; //Increase the duty cycle of the left wheel
             Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
         }
-        if(diffR <= 1) //If the number of notches on the right wheel is lower than the preset number by less than or equals to 1
+        if(diffR <= 1) //If the number of notches on the right wheel is lower than the preset number by less than or equals to 3
         {
-            if ((pwmLConfig.dutyCycle - (pwmRConfig.dutyCycle + increment)) >= 250)
-            {
-                pwmRConfig.dutyCycle += increment; //Increase the duty cycle of the right wheel
-                Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
-            }
+//            if( (pwmLConfig.dutyCycle - (pwmRConfig.dutyCycle + increment) ) >= 250 )
+//            {
+//                pwmRConfig.dutyCycle += increment; //Increase the duty cycle of the right wheel
+//                Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+//            }
+            pwmRConfig.dutyCycle+=increment; //Increase the duty cycle of the right wheel
+            Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
         }
     }
-    numSample++; //Increment numSample
+    numSample++;
 
     Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
@@ -374,9 +429,9 @@ int getNumNotch(bool add, char side, bool reset)
 
 
     }
-    else if (side == 'R' && add == false) //If add is false and the side is R
+    else if (side == 'R' && add == false)
     {
-        if(reset) //If reset is true
+        if(reset)
         {
             tempstoreR = numNotchR;
             numNotchR = 0; //Reset the number of notches for the right wheel to 0
@@ -387,6 +442,9 @@ int getNumNotch(bool add, char side, bool reset)
             return numNotchR;
         }
     }
+
+
+
     return 0;
 }
 
@@ -406,58 +464,48 @@ int presetNotch(bool set, int notches)
 
 void carForward()
 {
-    //Left wheel forward
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); //Port 4.5 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4); //Port 4.4 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4);
 
-    //Right wheel forward
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2); //Port 4.2 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0); //Port 4.0 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
 }
 
 void carLeft()
 {
-    //Left wheel reverse
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); //Port 4.4 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN5); //Port 4.5 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN5);
 
-    //Right wheel forward
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2); //Port 4.2 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0); //Port 4.0 high
-    turnCheck(true,'L'); //Set direction of the car turning to be left
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
+    turnCheck(true,'L');
 }
 
 void carRight()
 {
-    //Left wheel forward
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); //Port 4.5 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4); //Port 4.4 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4);
 
-    //Right wheel reverse
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0); //Port 4.0 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2); //Port 4.2 high
-    turnCheck(true,'R'); //Set direction of the car turning to be right
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2);
+    turnCheck(true,'R');
 }
 
 void carBackwards()
 {
-    //Left wheel reverse
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); //Port 4.4 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN5); //Port 4.5 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN5);
 
-    //Right wheel reverse
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0); //Port 4.0 low
-    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2); //Port 4.2 high
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0);
+    GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2);
 }
 void carStop()
 {
-    //Left wheel stop
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); //Port 4.5 low
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); //Port 4.4 low
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4);
 
-    //Right wheel stop
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0); //Port 4.0 low
-    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2); //Port 4.2 low
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0); // PIN5 Low = Forward, PIN4 Low = reverse
+    GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
 }
 
 void uPrintf(unsigned char * TxArray)
@@ -470,14 +518,15 @@ void uPrintf(unsigned char * TxArray)
     }
 }
 
-//Function to check the direction that the car is turning since it can only turn in one direction at one time
+//Function to check if the vehicle is turning since it can only turn in one direction at one time
 char turnCheck(bool set, char side)
 {
-    static char turnSide = 'A'; //Default value is 'A'
-    if (set) //If set is true
+    static char turnSide = 'A';
+    if(set)
     {
-        turnSide = side; //Set the value of turnSide with the input value (either 'L' or 'R')
+        turnSide = side;
     }
 
-    return turnSide; //Return the value of turnSide
+    return turnSide;
+
 }
