@@ -52,6 +52,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define WHEELCIRCUMFERENCE 20.42035
 
 /* Timer_A PWM Configuration Parameter */
 Timer_A_PWMConfig pwmLConfig =
@@ -61,7 +62,7 @@ Timer_A_PWMConfig pwmLConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        4000
+        7000
 };
 
 Timer_A_PWMConfig pwmRConfig =
@@ -71,7 +72,7 @@ Timer_A_PWMConfig pwmRConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        4000
+        7000
 };
 
 const Timer_A_UpModeConfig pidTimer =
@@ -171,7 +172,7 @@ int main(void)
     Interrupt_enableMaster();
 
     //set notch speed
-    presetNotch(true,3);
+    presetNotch(true,10);
 
 
 
@@ -279,11 +280,15 @@ void TA1_0_IRQHandler(void)
     int presetNumNotch = presetNotch(false, 0);
     int notchL = getNumNotch(false, 'L', true);
     int notchR = getNumNotch(false, 'R', true);
-    int increment = 100;
-    float perL=1;
-    float perR=1;
+    int increment = 500;
+    float perL = 1;
+    float perR = 1;
     float dcL;
     float dcR;
+    static bool rampspeed = false;
+
+    float cmPerSecL = 0;
+    float cmPerSecR = 0;
 
     int diffL = notchL- presetNumNotch; //(Number of notches for the left wheel) - the preset number
     int diffR = notchR - presetNumNotch; //(Number of notches for the right wheel) - the preset number
@@ -293,15 +298,15 @@ void TA1_0_IRQHandler(void)
     }
     else
     {
-        perL = presetNumNotch/notchL;
+        perL = presetNumNotch / notchL;
     }
     if(notchR == 0)
     {
-        perR = presetNumNotch/1;
+        perR = presetNumNotch / 1;
     }
     else
     {
-        perR = presetNumNotch/notchR;
+        perR = presetNumNotch / notchR;
     }
 
     unsigned char buffer[33] = "";
@@ -338,7 +343,20 @@ void TA1_0_IRQHandler(void)
     uPrintf(buffer);
     uPrintf("\n\r");
 
+    cmPerSecL = (WHEELCIRCUMFERENCE / 20) * notchL;
+    cmPerSecR = (WHEELCIRCUMFERENCE / 20) * notchR;
 
+    uPrintf("Speed of left wheel = ");
+    sprintf(buffer,"%f ",cmPerSecL);
+    uPrintf(buffer);
+    uPrintf("cm/s");
+    uPrintf("\n\r");
+
+    uPrintf("Speed of right wheel = ");
+    sprintf(buffer,"%f ",cmPerSecR);
+    uPrintf(buffer);
+    uPrintf("cm/s");
+    uPrintf("\n\r");
 
     if (numSample >2) {
 //        if(diffL)
@@ -365,20 +383,28 @@ void TA1_0_IRQHandler(void)
 //            Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
 //
 //        }
+        if((diffL>=5) && (diffR >=5) && rampspeed == true)
+        {
+            pwmLConfig.dutyCycle = 4000;
+            pwmRConfig.dutyCycle = 4000;
+            rampspeed = false;
+
+
+        }
         if(diffL >= 1) //If the number of notches on the left wheel is greater than the preset number by more than or equals to 3
         {
             pwmLConfig.dutyCycle-=increment; //Decrease the duty cycle of the left wheel
-            Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+
         }
         if(diffR >= 1) //If the number of notches on the right wheel is greater than the preset number by more than or equals to 1
         {
             pwmRConfig.dutyCycle-=increment; //Decrease the duty cycle of the right wheel
-            Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+
         }
         if(diffL <= 1) //If the number of notches on the left wheel is lower than the preset number by less than or equals to 1
         {
             pwmLConfig.dutyCycle+=increment; //Increase the duty cycle of the left wheel
-            Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
+
         }
         if(diffR <= 1) //If the number of notches on the right wheel is lower than the preset number by less than or equals to 3
         {
@@ -388,8 +414,16 @@ void TA1_0_IRQHandler(void)
 //                Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
 //            }
             pwmRConfig.dutyCycle+=increment; //Increase the duty cycle of the right wheel
-            Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+
         }
+        if(notchL == 0 && notchR == 0)
+        {
+            pwmLConfig.dutyCycle = 9000;
+            pwmRConfig.dutyCycle = 9000;
+            rampspeed = true;
+        }
+        Timer_A_generatePWM(TIMER_A2_BASE, &pwmRConfig);
+        Timer_A_generatePWM(TIMER_A0_BASE, &pwmLConfig);
     }
     numSample++;
 
