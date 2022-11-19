@@ -405,11 +405,11 @@ void TA1_0_IRQHandler(void)
     }
     numSample++;
 
-    sendData(avgSpeedWhole, cmAvgWhole);
-    sendData(avgSpeedDecimal, cmAvgRemainder);
+    sendData("avgSpeedWhole", cmAvgWhole);
+    sendData("avgSpeedDecimal", cmAvgRemainder);
 
-    sendData(distanceWhole, distanceTravelledWhole);
-    sendData(distanceDecimal, distanceTravelledRemainder);
+    sendData("distanceWhole", distanceTravelledWhole);
+    sendData("distanceDecimal", distanceTravelledRemainder);
 
     Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
