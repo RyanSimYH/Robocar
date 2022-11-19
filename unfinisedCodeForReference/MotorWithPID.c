@@ -405,16 +405,15 @@ void TA1_0_IRQHandler(void)
     }
     numSample++;
 
-    sendData(speedAverageWhole, cmAvgWhole);
-    sendData(speedAverageRemainder, cmAvgRemainder);
+    sendData(avgSpeedWhole, cmAvgWhole);
+    sendData(avgSpeedDecimal, cmAvgRemainder);
 
     sendData(distanceWhole, distanceTravelledWhole);
-    sendData(distanceRemainder, distanceTravelledRemainder);
+    sendData(distanceDecimal, distanceTravelledRemainder);
 
     Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
 }
-
 
 int getNumNotch(bool add, char side, bool reset)
 {
@@ -487,25 +486,33 @@ void carForward()
 
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
+
+    sendData("turning", 1);
 }
 
 void carLeft()
 {
+    unsigned char turnLeft[20] = "Car turning left";
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN4); // PIN5 Low = Forward, PIN4 Low = reverse
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN5);
 
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
+
+    sendData("turning", 0);
     turnCheck(true,'L');
 }
 
 void carRight()
 {
+    unsigned char turnRight[20] = "Car turning right";
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN5); // PIN5 Low = Forward, PIN4 Low = reverse
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN4);
 
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2);
+
+    sendData("turning", 2);
     turnCheck(true,'R');
 }
 
