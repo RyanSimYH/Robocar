@@ -13,12 +13,6 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 
-#define IN3 4
-#define IN4 3
-#define ENB 2
-#define IN1 6
-#define IN2 7
-#define ENA 8
 #define IR_GPIO 26
 #define SAMPLE_COUNT 5
 #define BLACK 1
@@ -52,14 +46,18 @@ static uint8_t previousBin = 1;      // 0 for white 1 for black, Starts off blac
 static float averageData = 0;
 static uint16_t barcodeArray[30];
 
-void forward();
-void reverse();
 void decodeBarcode();
 
-// Used to find Minimum and Maxmimum value detected for thick bar
+// Used to find Maxmimum value detected for narrow bar
 uint16_t findMax(uint16_t firstData, uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData);
 
-// Function for timer interupt
+/**
+ * Digital Filter
+ * Using A specific number samples to get 1 result
+ * Result per specific number of sample is
+ * duration of timer interrupt * SAMPLE_COUNT
+ * Using the voltage to determine black and white
+ */
 bool repeating_timer_callback(struct repeating_timer *t)
 {
 
@@ -73,14 +71,6 @@ bool repeating_timer_callback(struct repeating_timer *t)
         // Calculate Voltage
         float voltage = result * conversion_factor;
 
-        /**
-         * Digital Filter
-         * Using A specific number samples to get 1 result
-         * Result per specific number of sample is
-         * duration of timer interrupt * SAMPLE_COUNT
-         * Using the voltage to determine black and white
-         */
-
         // Check if index of sample is sample count
         if (sampleIndex < SAMPLE_COUNT)
         {
@@ -91,7 +81,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
         else
         {
 
-            // TO get the Average Data of result
+            // Get average data from sample for digital filtering.
             averageData /= SAMPLE_COUNT;
 
             // Note : modify the value to fit the environment
@@ -110,6 +100,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
             {
                 // White Detected
 
+                // To determine if barcode has started scanning.
                 if (barcodeBarIndex == -1)
                 {
                     barcodeBarIndex++;
@@ -117,6 +108,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
                 }
                 else
                 {
+                    // Check if previo
                     if (previousBin == BLACK)
                     {
 
@@ -127,6 +119,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
                     }
                 }
             }
+
             if (barcodeBarIndex != -1)
             {
                 barcodeArray[barcodeBarIndex] += 1;
@@ -145,7 +138,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
 
         printf("Clearing Barcode Memory...\n");
 
-        // memset(barcodeArray, 0, sizeof barcodeArray);
+        memset(barcodeArray, 0, sizeof barcodeArray);
 
         barcodeBarIndex = -1;
     }
@@ -159,26 +152,9 @@ int main()
     printf("-------- Welcome to barcode --------\n");
     adc_init();
 
-    // Initialize GPIO
-    // gpio_init(IN3);
-    // gpio_init(IN4);
-    // gpio_init(ENB);
-    // gpio_init(IN1);
-    // gpio_init(IN2);
-    // gpio_init(ENA);
     gpio_init(IR_GPIO);
 
-    // Set Direction for GPIO
-    // gpio_set_dir(IN3, GPIO_OUT);
-    // gpio_set_dir(IN4, GPIO_OUT);
-    // gpio_set_dir(ENB, GPIO_OUT);
-    // gpio_set_dir(IN1, GPIO_OUT);
-    // gpio_set_dir(IN2, GPIO_OUT);
-    // gpio_set_dir(ENB, GPIO_OUT);
     gpio_set_dir(IR_GPIO, GPIO_IN);
-
-    // gpio_put(ENB, 1);
-    // gpio_put(ENA, 1);
 
     adc_gpio_init(IR_GPIO);
 
@@ -188,30 +164,14 @@ int main()
     struct repeating_timer timer;
 
     // Timer Interrupt
-    // Occur every 0.1sec
+    // Occur every 3m
     add_repeating_timer_ms(3, repeating_timer_callback, NULL, &timer);
     while (1)
     {
-        // forward();
 
         tight_loop_contents();
     }
 }
-void forward()
-{
-    gpio_put(IN1, 1);
-    gpio_put(IN2, 0);
-    gpio_put(IN3, 1);
-    gpio_put(IN4, 0);
-}
-void reverse()
-{
-    gpio_put(IN1, 0);
-    gpio_put(IN2, 1);
-    gpio_put(IN3, 0);
-    gpio_put(IN4, 1);
-}
-
 void decodeBarcode()
 {
     // Code 39 Start and End will always Contain this binary 1000101110111010
