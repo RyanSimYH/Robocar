@@ -18,6 +18,7 @@
 #define BLACK 1
 #define WHITE 0
 
+// Lookup table for the code39
 static const uint32_t code39LookupTable[44] = {
     111221211, 211211112, 112211112, 212211111, 111221112,
     211221111, 112221111, 111211212, 211211211, 112211211,
@@ -29,6 +30,7 @@ static const uint32_t code39LookupTable[44] = {
     122121111, 121111212, 221111211, 122111211, 121212111,
     121211121, 121112121, 111212121, 121121211};
 
+// Match to Lookup Table for Code39 for DECODED RESULT
 static const char code39LookupMatch[44] = {
     '0', '1', '2', '3', '4',
     '5', '6', '7', '8', '9',
@@ -40,12 +42,13 @@ static const char code39LookupMatch[44] = {
     'Z', '-', '.', ' ', '$',
     '/', '+', '%', '*'};
 
-static uint8_t sampleIndex = 0;
-static int16_t barcodeBarIndex = -1; // Basrcode not detected yet.
+static uint8_t sampleIndex = 0;      // Indexing for Sampling
+static int16_t barcodeBarIndex = -1; // Barcode not detected yet.
 static uint8_t previousBin = 1;      // 0 for white 1 for black, Starts off black
-static float averageData = 0;
-static uint16_t barcodeArray[30];
+static float averageData = 0;        // Average Data of Sample
+static uint16_t barcodeArray[30];    // Array to store the data of barcode
 
+// Function used to decode binary
 void decodeBarcode();
 
 // Used to find Maxmimum value detected for narrow bar
