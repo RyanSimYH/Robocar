@@ -13,18 +13,13 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 
-#define IN3 4
-#define IN4 3
-#define ENB 2
-#define IN1 6
-#define IN2 7
-#define ENA 8
 #define IR_GPIO 26
 #define SAMPLE_COUNT 5
 #define BLACK 1
 #define WHITE 0
 
-static const uint32_t code39LookupTable[44] = {
+// Lookup table for the code39
+static const uint32_t g_barcode_lookup_table[44] = {
     111221211, 211211112, 112211112, 212211111, 111221112,
     211221111, 112221111, 111211212, 211211211, 112211211,
     211112112, 112112112, 212112111, 111122112, 211122111,
@@ -35,7 +30,8 @@ static const uint32_t code39LookupTable[44] = {
     122121111, 121111212, 221111211, 122111211, 121212111,
     121211121, 121112121, 111212121, 121121211};
 
-static const char code39LookupMatch[44] = {
+// Match to Lookup Table for Code39 for DECODED RESULT
+static const char g_barcode_lookup_match[44] = {
     '0', '1', '2', '3', '4',
     '5', '6', '7', '8', '9',
     'A', 'B', 'C', 'D', 'E',
@@ -46,24 +42,29 @@ static const char code39LookupMatch[44] = {
     'Z', '-', '.', ' ', '$',
     '/', '+', '%', '*'};
 
-static uint8_t sampleIndex = 0;
-static int16_t barcodeBarIndex = -1; // Basrcode not detected yet.
-static uint8_t previousBin = 1;      // 0 for white 1 for black, Starts off black
-static float averageData = 0;
-static uint16_t barcodeArray[30];
+static uint8_t g_sample_index = 0;       // Indexing for Sampling
+static int16_t g_barcode_bar_index = -1; // Barcode not detected yet.
+static uint8_t g_previous_bin = 1;       // 0 for white 1 for black, Starts off black
+static float g_average_data = 0;         // Average Data of Sample
+static uint16_t g_barcode_array[30];     // Array to store the data of barcode
 
-void forward();
-void reverse();
+// Function used to decode binary
 void decodeBarcode();
 
-// Used to find Minimum and Maxmimum value detected for thick bar
+// Used to find Maxmimum value detected for narrow bar
 uint16_t findMax(uint16_t firstData, uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData);
 
-// Function for timer interupt
+/**
+ * Digital Filter
+ * Using A specific number samples to get 1 result
+ * Result per specific number of sample is
+ * duration of timer interrupt * SAMPLE_COUNT
+ * Using the voltage to determine black and white
+ */
 bool repeating_timer_callback(struct repeating_timer *t)
 {
 
-    if (barcodeBarIndex < 26)
+    if (g_barcode_bar_index < 26)
     {
         // PICO 12 bit ADC - 4096 taking for the adc voltage used 3.3v
         const float conversion_factor = 3.3f / 4096;
@@ -73,69 +74,64 @@ bool repeating_timer_callback(struct repeating_timer *t)
         // Calculate Voltage
         float voltage = result * conversion_factor;
 
-        /**
-         * Digital Filter
-         * Using A specific number samples to get 1 result
-         * Result per specific number of sample is
-         * duration of timer interrupt * SAMPLE_COUNT
-         * Using the voltage to determine black and white
-         */
-
         // Check if index of sample is sample count
-        if (sampleIndex < SAMPLE_COUNT)
+        if (g_sample_index < SAMPLE_COUNT)
         {
-            averageData += voltage;
+            g_average_data += voltage;
 
-            sampleIndex++;
+            g_sample_index++;
         }
         else
         {
 
-            // TO get the Average Data of result
-            averageData /= SAMPLE_COUNT;
+            // Get average data from sample for digital filtering.
+            g_average_data /= SAMPLE_COUNT;
 
             // Note : modify the value to fit the environment
-            if (averageData > 0.171)
+            if (g_average_data > 0.171)
             {
                 // Black Detected
 
-                if (previousBin == WHITE)
+                if (g_previous_bin == WHITE)
                 {
-                    printf("Bar detected : %d \n", barcodeArray[barcodeBarIndex - 1]);
-                    barcodeBarIndex++;
-                    previousBin = BLACK;
+                    printf("Bar detected : %d \n", g_barcode_array[g_barcode_bar_index - 1]);
+                    g_barcode_bar_index++;
+                    g_previous_bin = BLACK;
                 }
             }
             else
             {
                 // White Detected
 
-                if (barcodeBarIndex == -1)
+                // To determine if barcode has started scanning.
+                if (g_barcode_bar_index == -1)
                 {
-                    barcodeBarIndex++;
-                    previousBin = WHITE;
+                    g_barcode_bar_index++;
+                    g_previous_bin = WHITE;
                 }
                 else
                 {
-                    if (previousBin == BLACK)
+                    // Check if previo
+                    if (g_previous_bin == BLACK)
                     {
 
-                        printf("Bar detected : %d \n", barcodeArray[barcodeBarIndex - 1]);
+                        printf("Bar detected : %d \n", g_barcode_array[g_barcode_bar_index - 1]);
 
-                        barcodeBarIndex++;
-                        previousBin = WHITE;
+                        g_barcode_bar_index++;
+                        g_previous_bin = WHITE;
                     }
                 }
             }
-            if (barcodeBarIndex != -1)
+
+            if (g_barcode_bar_index != -1)
             {
-                barcodeArray[barcodeBarIndex] += 1;
+                g_barcode_array[g_barcode_bar_index] += 1;
             }
 
             // Reset Average Data and Sample Index
-            averageData = 0;
+            g_average_data = 0;
 
-            sampleIndex = 0;
+            g_sample_index = 0;
         }
     }
     else
@@ -145,9 +141,9 @@ bool repeating_timer_callback(struct repeating_timer *t)
 
         printf("Clearing Barcode Memory...\n");
 
-        // memset(barcodeArray, 0, sizeof barcodeArray);
+        memset(g_barcode_array, 0, sizeof g_barcode_array);
 
-        barcodeBarIndex = -1;
+        g_barcode_bar_index = -1;
     }
     return true;
 }
@@ -159,26 +155,9 @@ int main()
     printf("-------- Welcome to barcode --------\n");
     adc_init();
 
-    // Initialize GPIO
-    // gpio_init(IN3);
-    // gpio_init(IN4);
-    // gpio_init(ENB);
-    // gpio_init(IN1);
-    // gpio_init(IN2);
-    // gpio_init(ENA);
     gpio_init(IR_GPIO);
 
-    // Set Direction for GPIO
-    // gpio_set_dir(IN3, GPIO_OUT);
-    // gpio_set_dir(IN4, GPIO_OUT);
-    // gpio_set_dir(ENB, GPIO_OUT);
-    // gpio_set_dir(IN1, GPIO_OUT);
-    // gpio_set_dir(IN2, GPIO_OUT);
-    // gpio_set_dir(ENB, GPIO_OUT);
     gpio_set_dir(IR_GPIO, GPIO_IN);
-
-    // gpio_put(ENB, 1);
-    // gpio_put(ENA, 1);
 
     adc_gpio_init(IR_GPIO);
 
@@ -188,45 +167,29 @@ int main()
     struct repeating_timer timer;
 
     // Timer Interrupt
-    // Occur every 0.1sec
+    // Occur every 3m
     add_repeating_timer_ms(3, repeating_timer_callback, NULL, &timer);
     while (1)
     {
-        // forward();
 
         tight_loop_contents();
     }
 }
-void forward()
-{
-    gpio_put(IN1, 1);
-    gpio_put(IN2, 0);
-    gpio_put(IN3, 1);
-    gpio_put(IN4, 0);
-}
-void reverse()
-{
-    gpio_put(IN1, 0);
-    gpio_put(IN2, 1);
-    gpio_put(IN3, 0);
-    gpio_put(IN4, 1);
-}
-
 void decodeBarcode()
 {
     // Code 39 Start and End will always Contain this binary 1000101110111010
-    if (barcodeBarIndex >= 20)
+    if (g_barcode_bar_index >= 20)
     {
         uint16_t min = 0;
         uint32_t barcodeValue = 0;
         uint8_t barcodeIndex = 9;
-        uint16_t firstMax = findMax(barcodeArray[1], barcodeArray[3], barcodeArray[4], barcodeArray[6], barcodeArray[8], barcodeArray[10]);
+        uint16_t firstMax = findMax(g_barcode_array[1], g_barcode_array[3], g_barcode_array[4], g_barcode_array[6], g_barcode_array[8], g_barcode_array[10]);
 
         // Decode Normally
         for (int i = 11; i < 20; i++)
         {
             int temp_value = 0;
-            if (barcodeArray[i] > firstMax)
+            if (g_barcode_array[i] > firstMax)
             {
                 temp_value = 2;
             }
@@ -246,12 +209,12 @@ void decodeBarcode()
         for (int i = 0; i < 44; i++)
         {
 
-            if (code39LookupTable[i] == barcodeValue)
+            if (g_barcode_lookup_table[i] == barcodeValue)
             {
 
                 printf("Result : ");
 
-                printf("%c", code39LookupMatch[i]);
+                printf("%c", g_barcode_lookup_match[i]);
                 printf(" \n");
                 break;
             }
