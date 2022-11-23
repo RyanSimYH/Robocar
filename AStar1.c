@@ -1,7 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #define maxsize 4      
-#define queuesize 20     
+#define NORTHCHECK 7    
+#define EASTCHECK 11  
+#define SOUTHCHECK 13  
+#define WESTCHECK 14  
+#define ACCESSIBLE 15  
+
 
 struct Point
 {
@@ -21,10 +26,8 @@ struct GraphNode
 {
     short checked;      //if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     //change to int eg 0000
-    short north;      //if -1, not checked.  if 0, checked but cannot be travelled to. if 1, checked can be travelled to
-    short east;
-    short south;
-    short west;
+    short directions;      // directions in binary in NESW eg 1111 1 = open, 0 = closed off
+
 };
 
 
@@ -42,18 +45,16 @@ int main()
     // printf("Enter number of points on the y axis: ");
     // scanf("%i",&yPoints);
 
-    // struct QueueItem queue[queuesize];              //Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
-    // struct QueueItem pathTravelled[queuesize];      //Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
-    // struct GraphNode graphArray[queuesize][queuesize];
 
     //FOR TESTING
     xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
     yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
 
+    short queuesize = xPoints * yPoints;  
+
     struct QueueItem queue[queuesize];              //Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
     struct QueueItem pathTravelled[queuesize];      //Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
     struct GraphNode graphArray[xPoints][yPoints];
-    struct GraphNode z = {1, 0, 0, 0, 0};
 
     
     // for (int i = 0; i < xPoints; i++)
@@ -84,55 +85,55 @@ int main()
     //BFS
 
 
-    struct GraphNode a = {1, 0, 1, 1, 0};
+    struct GraphNode a = {1, 0b0110};
     graphArray[0][0]= a;
-    struct GraphNode b = {1, 0, 1, 1, 1};
+    struct GraphNode b = {1, 7};
     graphArray[1][0]= b;
-    struct GraphNode c = {1, 0, 1, 1, 1};
+    struct GraphNode c = {1, 7};
     graphArray[2][0]= c;
-    struct GraphNode d = {1, 0, 1, 0, 1};
+    struct GraphNode d = {1, 0b0101};
     graphArray[3][0]= d;
-    struct GraphNode e = {1, 0, 0, 1, 1};
+    struct GraphNode e = {1, 3};
     graphArray[4][0]= e;
 
-    struct GraphNode f = {1, 1, 0, 1, 0};
+    struct GraphNode f = {1, 10};
     graphArray[0][1]= f;
-    struct GraphNode g = {1, 1, 0, 1, 0};
+    struct GraphNode g = {1, 10};
     graphArray[1][1]= g;
-    struct GraphNode h = {1, 1, 1, 0, 0};
+    struct GraphNode h = {1, 12};
     graphArray[2][1]= h;
-    struct GraphNode i = {1, 0, 0, 0, 1};
+    struct GraphNode i = {1, 1};
     graphArray[3][1]= i;
-    struct GraphNode j = {1, 1, 0, 1, 0};
+    struct GraphNode j = {1, 10};
     graphArray[4][1]= j;
 
-    struct GraphNode k = {1, 1, 0, 1, 0};
+    struct GraphNode k = {1, 10};
     graphArray[0][2]= k;
-    struct GraphNode l = {1, 1, 1, 0, 0};
+    struct GraphNode l = {1, 12};
     graphArray[1][2]= l;
-    struct GraphNode m = {1, 0, 1, 0, 1};
+    struct GraphNode m = {1, 5};
     graphArray[2][2]= m;
-    struct GraphNode n = {1, 0, 1, 0, 1};
+    struct GraphNode n = {1, 5};
     graphArray[3][2]= n;
-    struct GraphNode o = {1, 1, 0, 1, 1};
+    struct GraphNode o = {1, 11};
     graphArray[4][2]= o;
     
-    struct GraphNode p = {1, 1, 1, 0, 0};
+    struct GraphNode p = {1, 12};
     graphArray[0][3]= p;
-    struct GraphNode q = {1, 0, 1, 0, 1};
+    struct GraphNode q = {1, 5};
     graphArray[1][3]= q;
-    struct GraphNode r = {1, 0, 1, 0, 1};
+    struct GraphNode r = {1, 5};
     graphArray[2][3]= r;
-    struct GraphNode s = {1, 0, 1, 0, 1};
+    struct GraphNode s = {1, 5};
     graphArray[3][3]= s;
-    struct GraphNode t = {1, 1, 0, 0, 1};
+    struct GraphNode t = {1, 9};
     graphArray[4][3]= t;
     
  
 
     for (short j = 0; j < xPoints; j++)
-    {
-        printf(graphArray[j][0].north == 0?  "___ " :"    ");
+    {   //printf((graphArray[j][0].directions| NORTHCHECK) != ACCESSIBLE)
+        printf(((graphArray[j][0].directions| NORTHCHECK) != ACCESSIBLE) ?  " ___ " :"    ");
     }
 
     for(short i = 0; i < yPoints;i++)
@@ -140,14 +141,17 @@ int main()
         printf("\n");
         for (short j = 0; j < xPoints; j++)
         {
-            printf(graphArray[j][i].west == 0?  "|" :" ");
+            //printf(graphArray[j][i].west == 0?  "|" :" ");
+            printf(((graphArray[j][i].directions| WESTCHECK) != ACCESSIBLE) ?  "|" :" ");
             //printf(graphArray[j][i].north == 0?  "-" :" ");
             //printf("(%i,%i)",j,i);
-            printf(graphArray[j][i].south == 0?  "___" :"   ");
+            //printf(graphArray[j][i].south == 0?  "___" :"   ");
+            printf(((graphArray[j][i].directions| SOUTHCHECK) != ACCESSIBLE) ?  "___ " :"    ");
 
         }            
         
-        printf(graphArray[xPoints-1][i].east == 0?  "|" :" ");
+        //printf(graphArray[xPoints-1][i].east == 0?  "|" :" ");
+        printf(((graphArray[xPoints-1][i].directions| EASTCHECK) != ACCESSIBLE) ?   "|" :" ");
 
     }
 
@@ -179,10 +183,10 @@ int main()
 
     while (CheckIsPoint(queuedNode.nodeName, endPoint) == 0)       //If the current node to check is not the goal node
     {
-        printf("\n\nChecking Node (%i, %i): {%i, %i, %i, %i}", queuedNode.nodeName.x, queuedNode.nodeName.y, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].north, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].east, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].south, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].west);  //    (For checking)
+        printf("\n\nChecking Node (%i, %i): %i", queuedNode.nodeName.x, queuedNode.nodeName.y, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].directions);  //    (For checking)
        
         
-        if(graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].north == 1) //Checks if north node can be travelled to
+        if ((graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].directions| NORTHCHECK) == ACCESSIBLE) //Checks if north node can be travelled to      
         {
             pointToAdd.x = queuedNode.nodeName.x;
             pointToAdd.y = queuedNode.nodeName.y-1;
@@ -197,7 +201,7 @@ int main()
             }
         }
 
-        if(graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].east == 1) //Checks if north node can be travelled to
+        if ((graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].directions| EASTCHECK) == ACCESSIBLE) //Checks if east node can be travelled to
         {
             pointToAdd.x = queuedNode.nodeName.x+1;
             pointToAdd.y = queuedNode.nodeName.y;
@@ -212,7 +216,7 @@ int main()
             }
         }
 
-        if(graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].south == 1) //Checks if south node can be travelled to
+        if ((graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].directions| SOUTHCHECK) == ACCESSIBLE)  //Checks if south node can be travelled to
         {
             pointToAdd.x = queuedNode.nodeName.x;
             pointToAdd.y = queuedNode.nodeName.y+1;
@@ -227,7 +231,7 @@ int main()
             }
         }
 
-        if(graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].west == 1) //Checks if west node can be travelled to
+        if ((graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].directions| WESTCHECK) == ACCESSIBLE)  //Checks if west node can be travelled to
         {
             pointToAdd.x = queuedNode.nodeName.x-1;
             pointToAdd.y = queuedNode.nodeName.y;
@@ -241,6 +245,9 @@ int main()
                 printf("Add nieghbour west: (%i, %i)\n",pointToAdd.x, pointToAdd.y );
             }
         }
+   
+       
+
 
         for(short i = neighbours-1; i >=0; i--)                  //For each neighbour in the neighbourNode array
         {
@@ -329,8 +336,7 @@ int main()
     {
         CalcDirection(finalPath[i], finalPath[i-1]);
     }
-    
-    
+     
 }
 
 short CheckIsPoint(struct Point currPoint, struct Point endPoint)
