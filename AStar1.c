@@ -297,7 +297,7 @@ int main()
     paths -= 1;                         //Subtract 1 from the number of paths
     short route = 1;                      //Initialise the number of routes
     finalPath[0] = pathTravelled[paths].nodeName;           //Set the first index of the finalPath array to the last item in the pathTravelled array
-    printf("\nFinal: (%i, %i)", pathTravelled[paths].nodeName.x, pathTravelled[paths].nodeName.y);       //          (for checking)
+    //printf("\nFinal: (%i, %i)", pathTravelled[paths].nodeName.x, pathTravelled[paths].nodeName.y);       //          (for checking)
 
     //Appends the routes to take to the finalPath array
     while (CheckIsPoint(finalPath[route-1], startPoint) ==0)       //While the last index in the finalPath array is not the starting node
@@ -344,25 +344,15 @@ short CheckIsPoint(struct Point currPoint, struct Point endPoint)
 
 void SortQueue(struct QueueItem queue[], short end) //To sort the queue from highest to lowest
 {
-    short currIndex = 0;
-    short sorted = 0;
-
-    while (sorted < end)
+    for(short sorted = end -1; sorted >=0; sorted--)  //iterates through queue array
     {
-        while (currIndex +1  < end)                          //When the unsorted portion is not at the end yet
-        {  
-           // printf("\nunsorted: %i , %i",currIndex, queue[currIndex]);
-           // printf("\ncurr index: %i", currIndex);
-            if( queue[currIndex].currWeight <= queue[currIndex + 1].currWeight)       //When the current unsorted item is more than the one before it, decrease the currIndex by 1
+        for (short i = end -1; i >0; i--)           //When the unsorted portion is not at the end yet
+        {
+            if(queue[i].currWeight >= queue[i-1].currWeight)        //if the curr weight at the current index is greater or equal to the weight of the current index - 1, swap places
             {
-                Swapper(queue, currIndex);                                                         //sets the queue at the current index to temp                                            
+                Swapper(queue, i);   
             }
-            //printf("curr index: %i",currIndex);
-            currIndex ++;
-
         }
-        sorted++;
-        currIndex = 0;
     }
 }
 
@@ -372,8 +362,8 @@ void Swapper(struct QueueItem queue[], short currIndex)          //To swap the v
    // printf("\n curr index +1 content: %i, %i, %i", queue[currIndex+1].nodeName, queue[currIndex+1].startNode, queue[currIndex+1].currWeight );
     struct QueueItem temp = queue[currIndex];                                                //Saves the value of the unsorted item into temp
   //  printf("\n tempcontent: %i, %i, %i", temp.nodeName, temp.startNode, temp.currWeight );
-    queue[currIndex] =  queue[currIndex+1];
-    queue[currIndex+1] = temp;    
+    queue[currIndex] =  queue[currIndex-1];
+    queue[currIndex-1] = temp;    
     
 }
 
