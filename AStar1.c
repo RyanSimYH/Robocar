@@ -5,48 +5,50 @@
 
 struct Point
 {
-    int x;
-    int y;
+    short x;
+    short y;
 };
 
 struct QueueItem
 {
     struct Point nodeName;
     struct Point startNode;
-    int currWeight;
-    int edgeWeight;
+    short currWeight;
+    short edgeWeight;
 };
 
 struct GraphNode
 {
-    int checked;      //if -1,not checked, if 1, checked, if 3, check for weight to point in A star
+    short checked;      //if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     //change to int eg 0000
-    int north;      //if -1, not checked.  if 0, checked but cannot be travelled to. if 1, checked can be travelled to
-    int east;
-    int south;
-    int west;
+    short north;      //if -1, not checked.  if 0, checked but cannot be travelled to. if 1, checked can be travelled to
+    short east;
+    short south;
+    short west;
 };
 
 
-int CheckIsPoint(struct Point currPoint, struct Point endPoint);
-int CalculateHeuristics(int x, int y, int endX, int endY);
-void SortQueue(struct QueueItem queue[], int end);
-void Swapper(struct QueueItem queue[], int currIndex);
+short CheckIsPoint(struct Point currPoint, struct Point endPoint);
+void SortQueue(struct QueueItem queue[], short end);
+void Swapper(struct QueueItem queue[], short currIndex);
+void CalcDirection(struct Point currPoint, struct Point endPoint);
 
 int main()
 {
-    int edges;
-    int nodes;
-    int xPoints;
-    int yPoints;
-    printf("Enter number of points on the x axis: ");
-    scanf("%i", &xPoints);
-    printf("Enter number of points on the y axis: ");
-    scanf("%i",&yPoints);
+    short xPoints;
+    short yPoints;
+    // printf("Enter number of points on the x axis: ");
+    // scanf("%i", &xPoints);
+    // printf("Enter number of points on the y axis: ");
+    // scanf("%i",&yPoints);
 
     // struct QueueItem queue[queuesize];              //Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
     // struct QueueItem pathTravelled[queuesize];      //Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
     // struct GraphNode graphArray[queuesize][queuesize];
+
+    //FOR TESTING
+    xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
+    yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
 
     struct QueueItem queue[queuesize];              //Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
     struct QueueItem pathTravelled[queuesize];      //Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
@@ -71,9 +73,9 @@ int main()
     // }
 
     
-    //FOR TESTING
-    xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
-    yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
+    // //FOR TESTING
+    // xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
+    // yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
 
     //every time car moves (forward (depends on direction)): increase (x / y)
     //keep track x,y axis
@@ -128,15 +130,15 @@ int main()
     
  
 
-    for (int j = 0; j < xPoints; j++)
+    for (short j = 0; j < xPoints; j++)
     {
         printf(graphArray[j][0].north == 0?  "___ " :"    ");
     }
 
-    for(int i = 0; i < yPoints;i++)
+    for(short i = 0; i < yPoints;i++)
     {
         printf("\n");
-        for (int j = 0; j < xPoints; j++)
+        for (short j = 0; j < xPoints; j++)
         {
             printf(graphArray[j][i].west == 0?  "|" :" ");
             //printf(graphArray[j][i].north == 0?  "-" :" ");
@@ -150,29 +152,29 @@ int main()
     }
 
 
-    int currQueue = 0;                              //The number of items in the queue
-    int paths = 0;                                  //Number of paths travelled
+    short currQueue = 0;                              //The number of items in the queue
+    short paths = 0;                                  //Number of paths travelled
     struct QueueItem queuedNode = {0,0,0,0};        //The node that needs to be checked
+    struct Point startPoint;
+    struct Point endPoint;
 
     //To get the starting node
-    struct Point startPoint;
     printf("\nSelect Starting Node x pos: "); 
-    scanf("%i",&startPoint.x);
+    scanf("%hd",&startPoint.x);
     printf("Select Starting Node y pos: ");
-    scanf("%i",&startPoint.y);
+    scanf("%hd",&startPoint.y);
 
     //To get the goal node
-    struct Point endPoint;
     printf("Select Ending Node x pos: ");
-    scanf("%i",&endPoint.x);
+    scanf("%hd",&endPoint.x);
     printf("Select Ending Node y pos: ");
-    scanf("%i",&endPoint.y);
+    scanf("%hd",&endPoint.y);
     //printf("heu test: %i", CalculateHeuristics(startPoint.x,startPoint.y,endPoint.x,endPoint.y));
-     
-    queuedNode.nodeName = startPoint;
+
+    queuedNode.nodeName= startPoint;
     struct Point pointToAdd = {0,0};
     struct Point neighbourNode[maxsize];                 //Array to hold the neighbours of the node
-    int neighbours = 0;                         //Number of neighbours in the node
+    short neighbours = 0;                         //Number of neighbours in the node
     graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].checked = 3;  
 
     while (CheckIsPoint(queuedNode.nodeName, endPoint) == 0)       //If the current node to check is not the goal node
@@ -239,15 +241,14 @@ int main()
                 printf("Add nieghbour west: (%i, %i)\n",pointToAdd.x, pointToAdd.y );
             }
         }
-     
 
-        for(int i = 0; i < neighbours;i++)                  //For each neighbour in the neighbourNode array
+        for(short i = neighbours-1; i >=0; i--)                  //For each neighbour in the neighbourNode array
         {
 
-            int heuCost = abs(neighbourNode[i].x - endPoint.x) + abs(neighbourNode[i].y - endPoint.y);
+            short heuCost = abs(neighbourNode[i].x - endPoint.x) + abs(neighbourNode[i].y - endPoint.y);
             //printf("\nHeuristics of target node(%i,%i): %i", neighbourNode[i].x, neighbourNode[i].y, heuCost);              //          (for checking)
-            int currWeight = queuedNode.edgeWeight + 1;
-            int totalWeight = currWeight + heuCost;
+            short currWeight = queuedNode.edgeWeight + 1;
+            short totalWeight = currWeight + heuCost;
 
             struct QueueItem newItem = {neighbourNode[i], queuedNode.nodeName, totalWeight, currWeight};
             //printf("\nTotal weight: %i",  newItem.currWeight);              //          (for checking)
@@ -285,7 +286,7 @@ int main()
         paths++;                                        //Increments the number of paths
             
         //          (For checking)
-        for (int i = paths- 1; i >=0; i--)
+        for (short i = paths- 1; i >=0; i--)
         {
             printf("\n Path %i, travelled: (%i, %i) from:(%i, %i)", i, pathTravelled[i].nodeName.x, pathTravelled[i].nodeName.y, pathTravelled[i].startNode.x, pathTravelled[i].startNode.y);
         }
@@ -294,7 +295,7 @@ int main()
     //After the goal has been reached
     struct Point finalPath[paths];               //Initialise an array for the final path to take 
     paths -= 1;                         //Subtract 1 from the number of paths
-    int route = 1;                      //Initialise the number of routes
+    short route = 1;                      //Initialise the number of routes
     finalPath[0] = pathTravelled[paths].nodeName;           //Set the first index of the finalPath array to the last item in the pathTravelled array
     printf("\nFinal: (%i, %i)", pathTravelled[paths].nodeName.x, pathTravelled[paths].nodeName.y);       //          (for checking)
 
@@ -302,7 +303,7 @@ int main()
     while (CheckIsPoint(finalPath[route-1], startPoint) ==0)       //While the last index in the finalPath array is not the starting node
     {
         //printf("Node now: %i", finalPath[route-1]);             //          (for checking)   
-        for (int i = paths; i >=0; i--)                             //Iterates through the pathTravelled array backwards
+        for (short i = paths; i >=0; i--)                             //Iterates through the pathTravelled array backwards
         {
             //printf("Node name: %i", pathTravelled[i].nodeName);       //          (for checking)
             if (CheckIsPoint(pathTravelled[i].nodeName, finalPath[route-1]) == 1)        //If the name of the current iteration of the pathTravelled array matches the name of the last index of the finalPath array
@@ -317,36 +318,34 @@ int main()
     
     //To print out the route to take 
     printf("\nFinal Path: ");
-    for(int i = route -1; i >=0; i--)
+    for(short i = route -1; i >=0; i--)
     {
         printf("(%i,%i), ", finalPath[i].x,  finalPath[i].y);
+    }
+
+    //To print out the direction to take to next nodes
+    printf("\nDirections: ");
+    for(short i = route -1; i >0; i--)
+    {
+        CalcDirection(finalPath[i], finalPath[i-1]);
     }
     
     
 }
 
-int CheckIsPoint(struct Point currPoint, struct Point endPoint)
+short CheckIsPoint(struct Point currPoint, struct Point endPoint)
 {
     if(currPoint.x == endPoint.x && currPoint.y == endPoint.y)
     {
         return 1;
     }
-
     return 0;
 }
 
-int CalculateHeuristics(int x, int y, int endX, int endY)
+void SortQueue(struct QueueItem queue[], short end) //To sort the queue from highest to lowest
 {
-    int heu = 0;
-    heu = abs(endX - x) + abs(endY - y);
-    return heu;
-}
-
-
-void SortQueue(struct QueueItem queue[], int end) //To sort the queue from highest to lowest
-{
-    int currIndex = 0;
-    int sorted = 0;
+    short currIndex = 0;
+    short sorted = 0;
 
     while (sorted < end)
     {
@@ -356,7 +355,7 @@ void SortQueue(struct QueueItem queue[], int end) //To sort the queue from highe
            // printf("\ncurr index: %i", currIndex);
             if( queue[currIndex].currWeight <= queue[currIndex + 1].currWeight)       //When the current unsorted item is more than the one before it, decrease the currIndex by 1
             {
-                Swapper(queue, currIndex) ;                                                         //sets the queue at the current index to temp                                            
+                Swapper(queue, currIndex);                                                         //sets the queue at the current index to temp                                            
             }
             //printf("curr index: %i",currIndex);
             currIndex ++;
@@ -367,7 +366,7 @@ void SortQueue(struct QueueItem queue[], int end) //To sort the queue from highe
     }
 }
 
-void Swapper(struct QueueItem queue[], int currIndex)          //To swap the values around in the queue
+void Swapper(struct QueueItem queue[], short currIndex)          //To swap the values around in the queue
 {
    // printf("\n curr index content: %i, %i, %i", queue[currIndex].nodeName, queue[currIndex].startNode, queue[currIndex].currWeight );
    // printf("\n curr index +1 content: %i, %i, %i", queue[currIndex+1].nodeName, queue[currIndex+1].startNode, queue[currIndex+1].currWeight );
@@ -376,6 +375,36 @@ void Swapper(struct QueueItem queue[], int currIndex)          //To swap the val
     queue[currIndex] =  queue[currIndex+1];
     queue[currIndex+1] = temp;    
     
+}
+
+
+void CalcDirection(struct Point currPoint, struct Point endPoint)
+{
+    if(currPoint.x > endPoint.x)
+    {
+        //go westW
+        printf("WEST ");
+    }
+    else if (endPoint.x > currPoint.x) 
+    {
+        //go east
+        printf("EAST ");
+    }   
+    else if (endPoint.y > currPoint.y) 
+    {
+        //go south
+        printf("SOUTH ");
+    }
+    else if (currPoint.y > endPoint.y) 
+    {
+        //go north
+        printf("NORTH ");
+    }
+    else
+    {
+        //stay
+        printf("STAY ");
+    }
 }
 
 
