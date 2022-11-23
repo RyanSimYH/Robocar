@@ -52,20 +52,20 @@ const int maxDatapoints = 7; // including 1 for navigation
 void getIntDatapoints(void);
 void comms(void);
 
-// RX interrupt handler for Pico to read from M5 to serial
-void on_uart_rx() {
-    while (uart_is_readable(UART_ID)) {
-        uint8_t ch = uart_getc(UART_ID);
-        // Can we send it back?
-        if (uart_is_writable(UART_ID)) { // print to terminal
-            uart_putc(UART_ID, ch);
-        }
-        if (uart_is_writable(UART_ID_M5)) { // write to M5
-            uart_putc(UART_ID_M5, ch);
-        }
-        chars_rxed++;
-    }
-}
+// // RX interrupt handler for Pico to read from M5 to serial
+// void on_uart_rx() {
+//     while (uart_is_readable(UART_ID)) {
+//         uint8_t ch = uart_getc(UART_ID);
+//         // Can we send it back?
+//         if (uart_is_writable(UART_ID)) { // print to terminal
+//             uart_putc(UART_ID, ch);
+//         }
+//         if (uart_is_writable(UART_ID_M5)) { // write to M5
+//             uart_putc(UART_ID_M5, ch);
+//         }
+//         chars_rxed++;
+//     }
+// }
 
 int main() {
     // Set up our UART with a basic baud rate.
@@ -148,6 +148,7 @@ void comms(void){
             strcat(fullString, "}"); //finish packaging the message since datapoints have been gathered
             // ################ Jacelyn's Part ################
             // send fullString to M5 stick via UART
+            uart_puts(UART_ID, fullString);
 
         //}
 
