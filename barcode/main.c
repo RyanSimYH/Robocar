@@ -13,11 +13,12 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 
+#define k_const 0.5
 #define IR_GPIO 26
 #define SAMPLE_COUNT 5
 #define BLACK 1
 #define WHITE 0
-
+#define THRESHOLD 0.031
 // Lookup table for the code39
 static const uint32_t g_barcode_lookup_table[44] = {
     111221211, 211211112, 112211112, 212211111, 111221112,
@@ -52,7 +53,7 @@ static uint16_t g_barcode_array[30];     // Array to store the data of barcode
 void decodeBarcode();
 
 // Used to find Maxmimum value detected for narrow bar
-uint16_t findMax(uint16_t firstData, uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData);
+uint16_t findMax(uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData);
 
 /**
  * Digital Filter
@@ -64,7 +65,7 @@ uint16_t findMax(uint16_t firstData, uint16_t secondData, uint16_t thirdData, ui
 bool repeating_timer_callback(struct repeating_timer *t)
 {
 
-    if (g_barcode_bar_index < 26)
+    if (g_barcode_bar_index < 20)
     {
         // PICO 12 bit ADC - 4096 taking for the adc voltage used 3.3v
         const float conversion_factor = 3.3f / 4096;
@@ -77,7 +78,8 @@ bool repeating_timer_callback(struct repeating_timer *t)
         // Check if index of sample is sample count
         if (g_sample_index < SAMPLE_COUNT)
         {
-            g_average_data += voltage;
+            // g_average_data += voltage;
+            g_average_data = k_const * voltage + (1.0 - k_const) * g_average_data;
 
             g_sample_index++;
         }
@@ -86,11 +88,13 @@ bool repeating_timer_callback(struct repeating_timer *t)
 
             // Get average data from sample for digital filtering.
             g_average_data /= SAMPLE_COUNT;
+            // printf("\%f \n", g_average_data);
 
             // Note : modify the value to fit the environment
-            if (g_average_data > 0.171)
+            if (g_average_data > THRESHOLD)
             {
                 // Black Detected
+                // printf("black : %f \n", g_average_data);
 
                 if (g_previous_bin == WHITE)
                 {
@@ -102,6 +106,7 @@ bool repeating_timer_callback(struct repeating_timer *t)
             else
             {
                 // White Detected
+                // printf("white : %f", g_average_data);
 
                 // To determine if barcode has started scanning.
                 if (g_barcode_bar_index == -1)
@@ -168,7 +173,7 @@ int main()
 
     // Timer Interrupt
     // Occur every 3m
-    add_repeating_timer_ms(3, repeating_timer_callback, NULL, &timer);
+    add_repeating_timer_ms(1, repeating_timer_callback, NULL, &timer);
     while (1)
     {
 
@@ -183,7 +188,7 @@ void decodeBarcode()
         uint16_t min = 0;
         uint32_t barcodeValue = 0;
         uint8_t barcodeIndex = 9;
-        uint16_t firstMax = findMax(g_barcode_array[1], g_barcode_array[3], g_barcode_array[4], g_barcode_array[6], g_barcode_array[8], g_barcode_array[10]);
+        uint16_t firstMax = findMax(g_barcode_array[3], g_barcode_array[4], g_barcode_array[6], g_barcode_array[8], g_barcode_array[10]);
 
         // Decode Normally
         for (int i = 11; i < 20; i++)
@@ -222,40 +227,40 @@ void decodeBarcode()
     }
 }
 
-uint16_t findMax(uint16_t firstData, uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData)
+uint16_t findMax(uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData)
 {
-    // If 1st value is Largest
-    if (firstData > secondData && firstData > thirdData && firstData > fourthData && firstData > fifthData && firstData > sixthData)
-    {
-        return firstData;
-    }
+    // // If 1st value is Largest
+    // if (firstData > secondData && firstData > thirdData && firstData > fourthData && firstData > fifthData && firstData > sixthData)
+    // {
+    //     return firstData;
+    // }
 
     // If 2nd value is largest
-    if (secondData > firstData && secondData > thirdData && secondData > fourthData && secondData > fifthData && secondData > sixthData)
+    if (secondData > thirdData && secondData > fourthData && secondData > fifthData && secondData > sixthData)
     {
         return secondData;
     }
 
     // If 3rd data is largest
-    if (thirdData > firstData && thirdData > secondData && thirdData > fourthData && thirdData > fifthData && thirdData > sixthData)
+    if (thirdData > secondData && thirdData > fourthData && thirdData > fifthData && thirdData > sixthData)
     {
         return thirdData;
     }
 
     // If 4th data is largest
-    if (fourthData > firstData && fourthData > secondData && fourthData > thirdData && fourthData > fifthData && fourthData > sixthData)
+    if (fourthData > secondData && fourthData > thirdData && fourthData > fifthData && fourthData > sixthData)
     {
         return fourthData;
     }
 
     // If 5th data is largest
-    if (fifthData > firstData && fifthData > secondData && fifthData > thirdData && fifthData > fourthData && fifthData > sixthData)
+    if (fifthData > secondData && fifthData > thirdData && fifthData > fourthData && fifthData > sixthData)
     {
         return fifthData;
     }
 
     // if 6th data is largest
-    if (sixthData > firstData && sixthData > secondData && sixthData > thirdData && sixthData > fourthData && sixthData > fifthData)
+    if (sixthData > secondData && sixthData > thirdData && sixthData > fourthData && sixthData > fifthData)
     {
         return sixthData;
     }
