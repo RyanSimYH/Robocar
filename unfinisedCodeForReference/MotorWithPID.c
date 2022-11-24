@@ -62,7 +62,7 @@ Timer_A_PWMConfig pwmLConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        2000
+        4000
 };
 
 Timer_A_PWMConfig pwmRConfig =
@@ -72,7 +72,7 @@ Timer_A_PWMConfig pwmRConfig =
         10000,
         TIMER_A_CAPTURECOMPARE_REGISTER_1,
         TIMER_A_OUTPUTMODE_RESET_SET,
-        2000
+        4000
 };
 
 const Timer_A_UpModeConfig pidTimer =
@@ -101,6 +101,7 @@ const eUSCI_UART_Config uartConfig =
 int getNumNotch(bool add ,char side, bool reset);
 int presetNotch(bool set, int notches);
 void uPrintf(unsigned char * TxArray);
+void carForward();
 void carStop();
 void carLeft();
 void carRight();
@@ -166,13 +167,20 @@ int main(void)
     Interrupt_enableInterrupt(INT_TA1_0);
     Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
 
+    UART_initModule(EUSCI_A0_BASE, &uartConfig);
+    UART_enableModule(EUSCI_A0_BASE);
+    UART_enableInterrupt(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
+    Interrupt_enableInterrupt(INT_EUSCIA0);
+    Interrupt_enableMaster();
+
+
     /* Enabling interrupts and starting the watchdog timer */
     Interrupt_enableInterrupt(INT_PORT1);
     Interrupt_enableSleepOnIsrExit();
     Interrupt_enableMaster();
 
     //set notch speed
-    presetNotch(true,10);
+    presetNotch(true,7);
 
 
 
@@ -245,13 +253,16 @@ void PORT2_IRQHandler(void) //This function will be triggered if there is an int
     if(turnCheck(false,'A')=='R')
         {
             rightNotch++;
-            if(rightNotch == 14)
+            if(rightNotch == 18)
             {
                 carStop();
                 turnCheck(true,'A');
                 rightNotch = 0;
+                Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
+                carForward();
             }
         }
+
     GPIO_clearInterruptFlag(GPIO_PORT_P2, statusR); //Clear interrupt flag for Port 2
 }
 
@@ -269,9 +280,33 @@ void PORT3_IRQHandler(void) //This function will be triggered if there is an int
                 carStop();
                 turnCheck(true,'A');
                 leftNotch=0;
+                Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
+                carForward();
             }
         }
     GPIO_clearInterruptFlag(GPIO_PORT_P3, statusL); //Clear interrupt flag for Port 3
+}
+
+void EUSCIA0_IRQHandler(void){
+    unsigned char a = 0;
+    a = UART_receiveData(EUSCI_A0_BASE);
+    if(a=87)//W
+    {
+        carForward();
+    }
+    if(a=83)//S
+    {
+        carStop();
+    }
+    if(a=65)//A
+    {
+        carLeft();
+    }
+    if(a=68)//D
+    {
+        carRight();
+    }
+
 }
 
 void TA1_0_IRQHandler(void)
@@ -280,7 +315,7 @@ void TA1_0_IRQHandler(void)
     int presetNumNotch = presetNotch(false, 0);
     int notchL = getNumNotch(false, 'L', true);
     int notchR = getNumNotch(false, 'R', true);
-    int increment = 500;
+    int increment = 100;
     int dcL = 0; //Duty cycle of the left wheel
     int dcR = 0; //Duty cycle of the right wheel
     static bool rampspeed = false; //If ramp speed is true, then the duty cycle of both wheels will be set to 9000
@@ -288,8 +323,8 @@ void TA1_0_IRQHandler(void)
     static float integralR = 1.0; // The integral of the right wheel refers to the summation of all the differences in notches of the right wheel
     static int lasterrorL = 0; //The variable to store the previous error (used for derivative calculation) for the left wheel
     static int lasterrorR = 0; //The variable to store the previous error (used for derivative calculation) for the right wheel
-    int Ki = 10; // Constant multiplier that is used to regulate the proportional gain of the car
-    int Kd = 1; // Constant multiplier used to determine the response time
+    int Ki = 1; // Constant multiplier that is used to regulate the proportional gain of the car
+    int Kd = 10; // Constant multiplier used to determine the response time
 
     float cmPerSecL = 0;
     float cmPerSecR = 0;
@@ -310,15 +345,33 @@ void TA1_0_IRQHandler(void)
     // Proportional controller = (increment * diffL) = constant multiplied by error of wheel. used to make large changes to match speed
     // Integral Controller = (Ki * integralL) = constant multiplied by summation of past error. used to make small changes to correct the errors that persists
     // derivative controller = (Kd * (diffL - lasterrorL)) = constant multiplied by current difference - previous difference. used to prevent overshooting of the intended value.
+    unsigned char buffer[33] = "";
+    uPrintf("notchL = ");
+    sprintf(buffer,"%d",notchL);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("notchR = ");
+    sprintf(buffer,"%d", notchR);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("DC L = ");
+    sprintf(buffer,"%d",pwmLConfig.dutyCycle);
+    uPrintf(buffer);
+    uPrintf("\n\r");
+    uPrintf("DC R = ");
+    sprintf(buffer,"%d",pwmRConfig.dutyCycle);
+    uPrintf(buffer);
+    uPrintf("\n\r");
 
-    if (numSample > 2) { // Initial 2 seconds are not measured for calibration purposes
+    if (numSample > 2)
+    { // Initial 2 seconds are not measured for calibration purposes
         if(diffL != 0) // If the difference between the preset notches - number of left notches is not 0
         {
             integralL += (diffL * 0.5); //Increment integralL by error difference multiplied by the timer interval unit
 
             dcL = (increment * diffL) + (Ki * integralL) + (Kd * (diffL - lasterrorL)); //Duty cycle = P + I + D
             // increment is constant p, the proportional gain, for every unit of error (diffL), how much you going to ramp up by (increment)
-            pwmLConfig.dutyCycle = dcL;
+            pwmLConfig.dutyCycle += dcL;
             lasterrorL = diffL; //lasterrorL is to store the difference between the preset number of notches and the left notches for the previous timer interval
 
         }
@@ -328,27 +381,29 @@ void TA1_0_IRQHandler(void)
 
             dcR = (increment * diffR) + (Ki*integralR) + (Kd * (diffR - lasterrorR));
 
-            pwmRConfig.dutyCycle = dcR;
+            pwmRConfig.dutyCycle += dcR;
             lasterrorR = diffR;
 
         }
 
-        unsigned char buffer[33] = "";
+
         cmPerSecAvg = (cmPerSecL + cmPerSecR) * 2;
 
         distanceTravelled += cmPerSecAvg;
 
-        uPrintf("Speed of the car = ");
-        sprintf(buffer,"%f ", cmPerSecAvg);
-        uPrintf(buffer);
-        uPrintf("cm/s");
-        uPrintf("\n\r");
+//        uPrintf("Speed of the car = ");
+//        sprintf(buffer,"%f ", cmPerSecAvg);
+//        uPrintf(buffer);
+//        uPrintf("cm/s");
+//        uPrintf("\n\r");
+//
+//        uPrintf("Distance travelled by car = ");
+//        sprintf(buffer,"%f ", distanceTravelled);
+//        uPrintf(buffer);
+//        uPrintf("cm");
+//        uPrintf("\n\r");
 
-        uPrintf("Distance travelled by car = ");
-        sprintf(buffer,"%f ", distanceTravelled);
-        uPrintf(buffer);
-        uPrintf("cm");
-        uPrintf("\n\r");
+
 
         cmAvgWhole = cmPerSecAvg;
         cmAvgRemainder = (cmPerSecAvg - cmAvgWhole) * 1000;
@@ -405,11 +460,11 @@ void TA1_0_IRQHandler(void)
     }
     numSample++;
 
-    sendData("avgSpeedWhole", cmAvgWhole);
-    sendData("avgSpeedDecimal", cmAvgRemainder);
-
-    sendData("distanceWhole", distanceTravelledWhole);
-    sendData("distanceDecimal", distanceTravelledRemainder);
+//    sendData("avgSpeedWhole", cmAvgWhole);
+//    sendData("avgSpeedDecimal", cmAvgRemainder);
+//
+//    sendData("distanceWhole", distanceTravelledWhole);
+//    sendData("distanceDecimal", distanceTravelledRemainder);
 
     Timer_A_clearCaptureCompareInterrupt(TIMER_A1_BASE,TIMER_A_CAPTURECOMPARE_REGISTER_0);
 
@@ -487,7 +542,7 @@ void carForward()
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
 
-    sendData("turning", 1);
+//    sendData("turning", 1);
 }
 
 void carLeft()
@@ -499,7 +554,8 @@ void carLeft()
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN2);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN0);
 
-    sendData("turning", 0);
+    Timer_A_stopTimer(TIMER_A1_BASE);
+//    sendData("turning", 0);
     turnCheck(true,'L');
 }
 
@@ -511,8 +567,9 @@ void carRight()
 
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_PIN0);
     GPIO_setOutputHighOnPin(GPIO_PORT_P4, GPIO_PIN2);
+    Timer _A_stopTimer(TIMER_A1_BASE);
 
-    sendData("turning", 2);
+//    sendData("turning", 2);
     turnCheck(true,'R');
 }
 
