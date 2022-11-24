@@ -37,6 +37,7 @@ Pls upload your module's .c file here, for us to get a rough idea on how to inte
 |	33	|	10.73s	|
 
 > Mean: 10.59s
+> 
 > Std Dev: 0.10s
 
 ![Stopwatch at end of packet](https://github.com/RyanSimYH/Robocar/blob/communications/unfinisedCodeForReference/ble%20speed.png)
