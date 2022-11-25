@@ -53,25 +53,25 @@ int main()
     // BFS
 
 
-    CalcDirection('N', 'N');
-    CalcDirection('N', 'E');
-    CalcDirection('N', 'S');
-    CalcDirection('N', 'W');
+    // CalcDirection('N', 'N');
+    // CalcDirection('N', 'E');
+    // CalcDirection('N', 'S');
+    // CalcDirection('N', 'W');
 
-    CalcDirection('E', 'N');
-    CalcDirection('E', 'E');
-    CalcDirection('E', 'S');
-    CalcDirection('E', 'W');
+    // CalcDirection('E', 'N');
+    // CalcDirection('E', 'E');
+    // CalcDirection('E', 'S');
+    // CalcDirection('E', 'W');
 
-    CalcDirection('S', 'N');
-    CalcDirection('S', 'E');
-    CalcDirection('S', 'S');
-    CalcDirection('S', 'W');
+    // CalcDirection('S', 'N');
+    // CalcDirection('S', 'E');
+    // CalcDirection('S', 'S');
+    // CalcDirection('S', 'W');
 
-    CalcDirection('W', 'N');
-    CalcDirection('W', 'E');
-    CalcDirection('W', 'S');
-    CalcDirection('W', 'W');
+    // CalcDirection('W', 'N');
+    // CalcDirection('W', 'E');
+    // CalcDirection('W', 'S');
+    // CalcDirection('W', 'W');
 
     // DummyNodes();
     // AStar();
@@ -403,5 +403,4 @@ short dirShort(char direction)
     {
         return 3;
     }
-
 }
