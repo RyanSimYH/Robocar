@@ -4,14 +4,16 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include <stdio.h>
+
 #include "hardware/irq.h"
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
-#include "stdio.h"
+#include "time.h"
 
 /// \tag::uart_advanced[]
 
-#define UART_ID uart0
+#define UART_ID uart1
 #define BAUD_RATE 9600
 #define DATA_BITS 8
 #define STOP_BITS 1
@@ -19,8 +21,8 @@
 
 // We are using pins 0 and 1, but see the GPIO function select table in the
 // datasheet for information on which other pins can be used.
-#define UART_TX_PIN 0
-#define UART_RX_PIN 1
+#define UART_TX_PIN 4
+#define UART_RX_PIN 5
 
 static volatile int i = 0;
 static volatile int sendPacket = 1;
@@ -41,6 +43,7 @@ char buffer[1000] =
     "STTESTTESTTESTTESTTESTTESTTESTTESTTES";
 
 int main() {
+  stdio_init_all();
   // Set up our UART with a basic baud rate.
   uart_init(UART_ID, 2400);
 
@@ -62,27 +65,22 @@ int main() {
 
   for (; i < 35; i++) {
     sleep_ms(5000);
-    uart_puts(UART_ID, "\n3\n");
 
-    sleep_ms(1000);
-    uart_puts(UART_ID, "\n2\n");
+    uint64_t startTime = time_us_64();
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uart_puts(UART_ID, buffer);
+    uint64_t endTime = time_us_64();
 
-    sleep_ms(1000);
-    uart_puts(UART_ID, "\n1\n");
-
-    sleep_ms(1000);
-    uart_puts(UART_ID, "\nGO\n");
-
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
-    uart_puts(UART_ID, buffer);
+    double executionTime = (double)(endTime - startTime) / 1000000;
+    printf("Attempt %i: %.8f sec\n", i, executionTime);
   }
 }
 
