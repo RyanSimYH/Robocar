@@ -14,9 +14,10 @@ struct Point pop();  // Remove and return the top most element of the stack
 struct Point peek(); // Return the top most element of the stack
 bool isEmpty();      // Check if the stack is in Underflow state or not
 char checkDirection(char turn);
-// int nextTravelDir(struct GraphNode** graphArray, short currX, short currY);
+int nextTravelDir(struct GraphNode **graphArray, short currX, short currY);
 
 char direction = 'N'; // default North
+short directionCount = 0;
 
 // Scan and then U-Turn
 
@@ -39,7 +40,7 @@ struct GraphNode
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     // change to int eg 0000
     short directions; // directions in binary in NESW eg 1111 1 = open, 0 = closed off
-    short routes;     // these routes will keep changing
+    short routes;
 };
 
 int main()
@@ -98,7 +99,7 @@ int main()
 
     if (leftSensorDistance > rightSensorDistance)
     {
-        //initialization
+        // initialization
         struct Point point;
         point.x, point.y, currX, currY = 0;
         push(point);
@@ -114,7 +115,7 @@ int main()
 
     else if (leftSensorDistance > rightSensorDistance)
     {
-         //initialization
+        // initialization
         struct Point point;
         point.x, currX = 4;
         point.y, currY = 0;
@@ -188,57 +189,85 @@ bool isEmpty()
     return false;
 }
 
-// int nextTravelDir(struct GraphNode graphArray, short currX, short currY)
-// {
-//     if ((graphArray.routes | NORTHCHECK) == ACCESSIBLE) // Checks if north node can be travelled to
-//     {
-//         // go north
-//         return 1;
-//     }
+int nextTravelDir(struct GraphNode **graphArray, short currX, short currY)
+{
+    if ((graphArray[currX][currY].routes | NORTHCHECK) == ACCESSIBLE) // Checks if north node can be travelled to
+    {
+        // go north
 
-//     if ((graphArray.routes | EASTCHECK) == ACCESSIBLE) // Checks if east node can be travelled to
-//     {
-//         // go east
-//         return 2;
-//     }
+        // how to turn
 
-//     if ((graphArray.routes | SOUTHCHECK) == ACCESSIBLE) // Checks if south node can be travelled to
-//     {
-//         // go south
-//         return 3;
-//     }
+        // move forward 27cm
 
-//     if ((graphArray.routes | WESTCHECK) == ACCESSIBLE) // Checks if west node can be travelled to
-//     {
-//         // go west
-//         return 4;
-//     }
-// }
+        // current y - 1
+
+        return 1;
+    }
+
+    if ((graphArray[currX][currY].routes | EASTCHECK) == ACCESSIBLE) // Checks if east node can be travelled to
+    {
+        // go east
+
+        // how to turn
+
+        // move forward 27cm
+
+        // current x + 1
+
+        return 2;
+    }
+
+    if ((graphArray[currX][currY].routes | SOUTHCHECK) == ACCESSIBLE) // Checks if south node can be travelled to
+    {
+        // go south
+
+        // how to turn
+
+        // move forward 27cm
+
+        // current y + 1
+
+        return 3;
+    }
+
+    if ((graphArray[currX][currY].routes | WESTCHECK) == ACCESSIBLE) // Checks if west node can be travelled to
+    {
+        // go west
+
+        // how to turn
+
+        // move forward 27cm
+
+        // current x - 1
+
+        return 4;
+    }
+}
 
 char checkDirection(char turn)
 {
-    short count = 0;
-    char direction;
 
     if (turn == 'L')
     {
-        count -= 1;
-        if (count == -1)
+        directionCount -= 1;
+        if (directionCount == -1)
         {
-            count = 3;
+            directionCount = 3;
         }
     }
 
-    else if (turn == 'T')
+    else if (turn == 'R')
     {
-        count += 1;
-        if (count == 4)
+        directionCount += 1;
+        if (directionCount == 4)
         {
-            count = 0;
+            directionCount = 0;
         }
     }
 
-    switch (count)
+    // Calculate the initial orientation of the car
+
+    switch (directionCount)
     {
     case 0:
         direction = 'N';
@@ -256,4 +285,54 @@ char checkDirection(char turn)
     default:
         break;
     }
+}
+// get the index of the direction
+
+short getIndex(char direction)
+{
+    // get the index of the arr
+    char directionArr[4] = {'N', 'E', 'S', 'W'};
+    short index = -1;
+
+    for (int i = 0; i < 4; i++)
+    {
+        if (directionArr[i] == direction)
+        {
+            index = i;
+            break;
+        }
+    }
+    return index;
+}
+
+// current direction takes in from checkDirection
+bool changeDirection(char currentDirection, char intendedDirection)
+{
+    if (currentDirection == intendedDirection)
+    {
+        printf("STAY");
+    }
+
+    else if (getIndex(currentDirection) == getIndex(intendedDirection) - 1)
+    {
+        // turn right;
+        checkDirection('R');
+    }
+
+    else if (getIndex(currentDirection) == getIndex(intendedDirection) + 1)
+    {
+        // turn left;
+        checkDirection('L');
+    }
+
+    else if (getIndex(currentDirection) == getIndex(intendedDirection) + 2)
+    {
+        // u turn
+        checkDirection('R');
+        checkDirection('R');
+    }
+}
+
+struct Point getNodeWithUnvisitedRoute(struct Point arr[20], struct GraphNode graphArray)
+{
 }

@@ -26,7 +26,7 @@ struct GraphNode
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     // change to int eg 0000
     short directions; // directions in binary in NESW eg 1111 1 = open, 0 = closed off
-    short routes; //verify routes that are open and close 
+    short routes;     // verify routes that are open and close
 };
 
 short CheckIsPoint(struct Point currPoint, struct Point endPoint);
