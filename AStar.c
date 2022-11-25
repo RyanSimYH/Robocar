@@ -26,6 +26,7 @@ struct GraphNode
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     // change to int eg 0000
     short directions; // directions in binary in NESW eg 1111 1 = open, 0 = closed off
+    short routes; //verify routes that are open and close 
 };
 
 short CheckIsPoint(struct Point currPoint, struct Point endPoint);
@@ -79,48 +80,48 @@ int main()
     // BFS
 
     // N E S W
-    struct GraphNode a = {1, 0b0110};
+    struct GraphNode a = {1, 0b0110, 0b0110};
     graphArray[0][0] = a;
-    struct GraphNode b = {1, 0b0111};
+    struct GraphNode b = {1, 0b0111, 0b0111};
     graphArray[1][0] = b;
-    struct GraphNode c = {1, 0b0111};
+    struct GraphNode c = {1, 0b0111, 0b0111};
     graphArray[2][0] = c;
-    struct GraphNode d = {1, 0b0101};
+    struct GraphNode d = {1, 0b0101, 0b0101};
     graphArray[3][0] = d;
-    struct GraphNode e = {1, 0b0011};
+    struct GraphNode e = {1, 0b0011, 0b0011};
     graphArray[4][0] = e;
 
-    struct GraphNode f = {1, 0b1010};
+    struct GraphNode f = {1, 0b1010, 0b1010};
     graphArray[0][1] = f;
-    struct GraphNode g = {1, 0b1010};
+    struct GraphNode g = {1, 0b1010, 0b1010};
     graphArray[1][1] = g;
-    struct GraphNode h = {1, 0b1100};
+    struct GraphNode h = {1, 0b1100, 0b1100};
     graphArray[2][1] = h;
-    struct GraphNode i = {1, 0b0001};
+    struct GraphNode i = {1, 0b0001, 0b0001};
     graphArray[3][1] = i;
-    struct GraphNode j = {1, 0b1010};
+    struct GraphNode j = {1, 0b1010, 0b1010};
     graphArray[4][1] = j;
 
-    struct GraphNode k = {1, 0b1010};
+    struct GraphNode k = {1, 0b1010, 0b1010};
     graphArray[0][2] = k;
-    struct GraphNode l = {1, 0b1100};
+    struct GraphNode l = {1, 0b1100, 0b1100};
     graphArray[1][2] = l;
-    struct GraphNode m = {1, 0b0101};
+    struct GraphNode m = {1, 0b0101, 0b0101};
     graphArray[2][2] = m;
-    struct GraphNode n = {1, 0b0101};
+    struct GraphNode n = {1, 0b0101, 0b0101};
     graphArray[3][2] = n;
-    struct GraphNode o = {1, 0b1011};
+    struct GraphNode o = {1, 0b1011, 0b1011};
     graphArray[4][2] = o;
 
-    struct GraphNode p = {1, 0b1100};
+    struct GraphNode p = {1, 0b1100, 0b1100};
     graphArray[0][3] = p;
-    struct GraphNode q = {1, 0b0101};
+    struct GraphNode q = {1, 0b0101, 0b0101};
     graphArray[1][3] = q;
-    struct GraphNode r = {1, 0b0101};
+    struct GraphNode r = {1, 0b0101, 0b0101};
     graphArray[2][3] = r;
-    struct GraphNode s = {1, 0b0101};
+    struct GraphNode s = {1, 0b0101, 0b0101};
     graphArray[3][3] = s;
-    struct GraphNode t = {1, 0b1001};
+    struct GraphNode t = {1, 0b1001, 0b1001};
     graphArray[4][3] = t;
 
     for (short j = 0; j < xPoints; j++)
