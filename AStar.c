@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #define maxsize 4
+#define maxarraysize 50
 #define NORTHCHECK 7
 #define EASTCHECK 11
 #define SOUTHCHECK 13
@@ -26,52 +27,24 @@ struct GraphNode
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
     // change to int eg 0000
     short directions; // directions in binary in NESW eg 1111 1 = open, 0 = closed off
-    short routes;
+    short routes;    //verify routes that are open and close 
 };
 
+void DummyNodes();
+void AStar();
 short CheckIsPoint(struct Point currPoint, struct Point endPoint);
 void SortQueue(struct QueueItem queue[], short end);
 void Swapper(struct QueueItem queue[], short currIndex);
-void CalcDirection(struct Point currPoint, struct Point endPoint);
+void CalcDirection(char currDir, char intendedDir);
+short dirShort(char direction);
+
+    short xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
+    short yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
+
+    struct GraphNode graphArray[5][4];
 
 int main()
 {
-    short xPoints;
-    short yPoints;
-    // printf("Enter number of points on the x axis: ");
-    // scanf("%i", &xPoints);
-    // printf("Enter number of points on the y axis: ");
-    // scanf("%i",&yPoints);
-
-    // FOR TESTING
-    xPoints = 5; // x points = (ultrasonic sensor distance in front + car length) /27
-    yPoints = 4; // y points = (ultrasonic sensor longer distance L/R + car width) /27
-
-    short queuesize = xPoints * yPoints;
-
-    struct QueueItem queue[queuesize];         // Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
-    struct QueueItem pathTravelled[queuesize]; // Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
-    struct GraphNode graphArray[xPoints][yPoints];
-
-    // for (int i = 0; i < xPoints; i++)
-    // {
-    //     for(int j = 0; j < yPoints; j++)
-    //     {
-    //         printf("\nEnter north of (%i,%i): ",i ,j);
-    //         scanf("%i", &z.north);
-    //         printf("Enter east of (%i,%i): ",i ,j);
-    //         scanf("%i", &z.east);
-    //         printf("Enter south of (%i,%i): ",i ,j);
-    //         scanf("%i", &z.south);
-    //         printf("Enter west of (%i,%i): ",i ,j);
-    //         scanf("%i", &z.west);
-    //         graphArray[i][j]=z;
-    //     }
-    // }
-
-    // //FOR TESTING
-    // xPoints = 5; //x points = (ultrasonic sensor distance in front + car length) /27
-    // yPoints = 4; //y points = (ultrasonic sensor longer distance L/R + car width) /27
 
     // every time car moves (forward (depends on direction)): increase (x / y)
     // keep track x,y axis
@@ -79,6 +52,34 @@ int main()
     // check how many nodes are left to check
     // BFS
 
+
+    CalcDirection('N', 'N');
+    CalcDirection('N', 'E');
+    CalcDirection('N', 'S');
+    CalcDirection('N', 'W');
+
+    CalcDirection('E', 'N');
+    CalcDirection('E', 'E');
+    CalcDirection('E', 'S');
+    CalcDirection('E', 'W');
+
+    CalcDirection('S', 'N');
+    CalcDirection('S', 'E');
+    CalcDirection('S', 'S');
+    CalcDirection('S', 'W');
+
+    CalcDirection('W', 'N');
+    CalcDirection('W', 'E');
+    CalcDirection('W', 'S');
+    CalcDirection('W', 'W');
+
+    // DummyNodes();
+    // AStar();
+
+}
+
+void DummyNodes()
+{
     // N E S W
     struct GraphNode a = {1, 0b0110, 0b0110};
     graphArray[0][0] = a;
@@ -123,6 +124,9 @@ int main()
     graphArray[3][3] = s;
     struct GraphNode t = {1, 0b1001, 0b1001};
     graphArray[4][3] = t;
+}
+
+void AStar(){
 
     for (short j = 0; j < xPoints; j++)
     { // printf((graphArray[j][0].directions| NORTHCHECK) != ACCESSIBLE)
@@ -165,11 +169,13 @@ int main()
     scanf("%hd", &endPoint.y);
     // printf("heu test: %i", CalculateHeuristics(startPoint.x,startPoint.y,endPoint.x,endPoint.y));
 
-    queuedNode.nodeName = startPoint;
-    struct Point pointToAdd = {0, 0};
-    struct Point neighbourNode[maxsize]; // Array to hold the neighbours of the node
-    short neighbours = 0;                // Number of neighbours in the node
-    graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].checked = 3;
+    queuedNode.nodeName= startPoint;
+    struct Point pointToAdd = {0,0};
+    struct Point neighbourNode[maxsize];                 //Array to hold the neighbours of the node
+    short neighbours = 0;                         //Number of neighbours in the node
+    struct QueueItem queue[maxarraysize];              //Initialise the queue array with the QueueItem struct, this will hold the queue for the paths to travel
+    struct QueueItem pathTravelled[maxarraysize];      //Initialise the pathTravelled array with the QueueItem struct, this will hold the QueueItems of the paths that have been popped from the queue
+    graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].checked = 3;  
 
     while (CheckIsPoint(queuedNode.nodeName, endPoint) == 0) // If the current node to check is not the goal node
     {
@@ -311,10 +317,10 @@ int main()
 
     // To print out the direction to take to next nodes
     printf("\nDirections: ");
-    for (short i = route - 1; i > 0; i--)
-    {
-        CalcDirection(finalPath[i], finalPath[i - 1]);
-    }
+    // for (short i = route - 1; i > 0; i--)
+    // {
+    //     CalcDirection(finalPath[i], finalPath[i - 1]);
+    // }
 }
 
 short CheckIsPoint(struct Point currPoint, struct Point endPoint)
@@ -350,31 +356,52 @@ void Swapper(struct QueueItem queue[], short currIndex) // To swap the values ar
     queue[currIndex - 1] = temp;
 }
 
-void CalcDirection(struct Point currPoint, struct Point endPoint)
+void CalcDirection(char currDir, char intendedDir)
 {
-    if (currPoint.x > endPoint.x)
+    short dirToTurn = (dirShort(intendedDir)-dirShort(currDir));
+    //printf("%d", dirToTurn);
+
+    if(dirToTurn == 0)
     {
-        // go westW
-        printf("WEST ");
+        //stay
+        printf("STAY  ");
     }
-    else if (endPoint.x > currPoint.x)
+    else if (dirToTurn == 1 || dirToTurn == -3)
     {
-        // go east
-        printf("EAST ");
+        //right
+        printf("right  ");
     }
-    else if (endPoint.y > currPoint.y)
+    else if (dirToTurn == 2 || dirToTurn == -2)
     {
-        // go south
-        printf("SOUTH ");
+        //u turn
+        printf("u turn  ");
     }
-    else if (currPoint.y > endPoint.y)
+    else if (dirToTurn == 3 || dirToTurn == -1)
     {
-        // go north
-        printf("NORTH ");
+        //left
+        printf("left  ");
     }
-    else
+
+}
+
+short dirShort(char direction)
+{
+
+    if(direction == 'N')
     {
-        // stay
-        printf("STAY ");
+        return 0;
     }
+    else if (direction == 'E')
+    {
+        return 1;
+    }
+    else if (direction == 'S')
+    {
+        return 2;
+    }
+    else if (direction == 'W')
+    {
+        return 3;
+    }
+
 }
