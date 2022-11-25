@@ -14,9 +14,9 @@ struct Point pop();  // Remove and return the top most element of the stack
 struct Point peek(); // Return the top most element of the stack
 bool isEmpty();      // Check if the stack is in Underflow state or not
 char checkDirection(char turn);
-int nextTravelDir(struct GraphNode **graphArray, short currX, short currY);
+int nextTravelDir(short currX, short currY);
 
-char direction = 'N'; // default North
+char compass = 'N'; // default North
 short directionCount = 0;
 
 // Scan and then U-Turn
@@ -33,8 +33,6 @@ struct node
     struct node *next;
 };
 
-struct node *head;
-
 struct GraphNode
 {
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
@@ -43,18 +41,16 @@ struct GraphNode
     short routes;
 };
 
+struct node *head;
+
+struct GraphNode graphArray[5][4];
+
+struct Point arr[20]; // 20 nodes
+
+short visitedPoints = 0;
+
 int main()
 {
-
-    short xPoints;
-    short yPoints;
-
-    xPoints = 5; // x points = (ultrasonic sensor distance in front + car length) /27
-    yPoints = 4; // y points = (ultrasonic sensor longer distance L/R + car width) /27
-
-    struct Point arr[20]; // 20 nodes
-    struct GraphNode graphArray[xPoints][yPoints];
-
     short leftSensorDistance = 0;    // test
     short rightSensorDistance = 100; // test
     short forwardSensorDistance;
@@ -65,7 +61,6 @@ int main()
     char westInput;
 
     short direction = 0; // default 0 means closed off routes.
-    short vistedPoints;
 
     short currX;
     short currY;
@@ -109,8 +104,8 @@ int main()
         struct GraphNode a = {1, direction, direction};
         graphArray[point.x][point.y] = a;
 
-        arr[vistedPoints] = point;
-        vistedPoints++;
+        arr[visitedPoints] = point;
+        visitedPoints++;
     }
 
     else if (leftSensorDistance > rightSensorDistance)
@@ -126,11 +121,9 @@ int main()
         struct GraphNode a = {1, direction, direction};
         graphArray[point.x][point.y] = a;
 
-        arr[vistedPoints] = point;
-        vistedPoints++;
+        arr[visitedPoints] = point;
+        visitedPoints++;
     }
-
-    // printf("%i", nextTravelDir(graphArray[xPoints][yPoints], currX, currY));
 }
 
 void push(struct Point point)
@@ -189,7 +182,7 @@ bool isEmpty()
     return false;
 }
 
-int nextTravelDir(struct GraphNode **graphArray, short currX, short currY)
+int nextTravelDir(short currX, short currY)
 {
     if ((graphArray[currX][currY].routes | NORTHCHECK) == ACCESSIBLE) // Checks if north node can be travelled to
     {
@@ -200,6 +193,8 @@ int nextTravelDir(struct GraphNode **graphArray, short currX, short currY)
         // move forward 27cm
 
         // current y - 1
+
+        // toggleNorth
 
         return 1;
     }
@@ -241,6 +236,10 @@ int nextTravelDir(struct GraphNode **graphArray, short currX, short currY)
         // current x - 1
 
         return 4;
+
+        //if routes are all zero
+        //change direction(r)
+        //change direction(r)
     }
 }
 
@@ -270,17 +269,17 @@ char checkDirection(char turn)
     switch (directionCount)
     {
     case 0:
-        direction = 'N';
+        compass = 'N';
         break;
 
     case 1:
-        direction = 'E';
+        compass = 'E';
         break;
     case 2:
-        direction = 'S';
+        compass = 'S';
         break;
     case 3:
-        direction = 'W';
+        compass = 'W';
 
     default:
         break;
@@ -330,9 +329,40 @@ bool changeDirection(char currentDirection, char intendedDirection)
         // u turn
         checkDirection('R');
         checkDirection('R');
+        //getDirection
+        //check through
     }
 }
 
 struct Point getNodeWithUnvisitedRoute(struct Point arr[20], struct GraphNode graphArray)
+{
+
+    for (int i = 0; i < 20; i++)
+    {
+        if (graphArray[arr[i].x][arr[i].y].routes != 0)
+        {
+            return arr[i].x, arr[i].y;
+        }
+    }
+}
+
+bool verifyNodeVistited(short currX, short currY)
+{
+    // 20 is the size of arr
+    for (short i = 0; i < 20; i++)
+    {
+        if (arr[i].x == currX && arr[i].y == currY)
+        {
+            return true;
+        }
+
+        else
+        {
+            return false;
+        }
+    }
+}
+
+void updateGraphNode(short currX, short currY)
 {
 }
