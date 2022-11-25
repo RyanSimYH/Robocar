@@ -25,7 +25,6 @@ struct QueueItem
 struct GraphNode
 {
     short checked; // if -1,not checked, if 1, checked, if 3, check for weight to point in A star
-    // change to int eg 0000
     short directions; // directions in binary in NESW eg 1111 1 = open, 0 = closed off
     short routes;    //verify routes that are open and close 
 };
@@ -129,7 +128,7 @@ void DummyNodes()
 void AStar(){
 
     for (short j = 0; j < xPoints; j++)
-    { // printf((graphArray[j][0].directions| NORTHCHECK) != ACCESSIBLE)
+    { 
         printf(((graphArray[j][0].directions | NORTHCHECK) != ACCESSIBLE) ? " ___ " : "    ");
     }
 
@@ -138,15 +137,10 @@ void AStar(){
         printf("\n");
         for (short j = 0; j < xPoints; j++)
         {
-            // printf(graphArray[j][i].west == 0?  "|" :" ");
             printf(((graphArray[j][i].directions | WESTCHECK) != ACCESSIBLE) ? "|" : " ");
-            // printf(graphArray[j][i].north == 0?  "-" :" ");
-            // printf("(%i,%i)",j,i);
-            // printf(graphArray[j][i].south == 0?  "___" :"   ");
             printf(((graphArray[j][i].directions | SOUTHCHECK) != ACCESSIBLE) ? "___ " : "    ");
         }
 
-        // printf(graphArray[xPoints-1][i].east == 0?  "|" :" ");
         printf(((graphArray[xPoints - 1][i].directions | EASTCHECK) != ACCESSIBLE) ? "|" : " ");
     }
 
@@ -167,7 +161,6 @@ void AStar(){
     scanf("%hd", &endPoint.x);
     printf("Select Ending Node y pos: ");
     scanf("%hd", &endPoint.y);
-    // printf("heu test: %i", CalculateHeuristics(startPoint.x,startPoint.y,endPoint.x,endPoint.y));
 
     queuedNode.nodeName= startPoint;
     struct Point pointToAdd = {0,0};
@@ -185,8 +178,7 @@ void AStar(){
         {
             pointToAdd.x = queuedNode.nodeName.x;
             pointToAdd.y = queuedNode.nodeName.y - 1;
-            // printf("\nChecking Node (%i, %i)", pointToAdd.x, pointToAdd.y);  //    (For checking)
-
+            
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if north node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the north node of the current point to the neighbours array
@@ -200,8 +192,7 @@ void AStar(){
         {
             pointToAdd.x = queuedNode.nodeName.x + 1;
             pointToAdd.y = queuedNode.nodeName.y;
-            // printf("\nChecking Node (%i, %i)", pointToAdd.x, pointToAdd.y);  //    (For checking)
-
+            
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if east node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the east node of the current point to the neighbours array
@@ -215,8 +206,7 @@ void AStar(){
         {
             pointToAdd.x = queuedNode.nodeName.x;
             pointToAdd.y = queuedNode.nodeName.y + 1;
-            // printf("\nChecking Node (%i, %i)", pointToAdd.x, pointToAdd.y);  //    (For checking)
-
+            
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if south node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the south node of the current point to the neighbours array
@@ -230,8 +220,7 @@ void AStar(){
         {
             pointToAdd.x = queuedNode.nodeName.x - 1;
             pointToAdd.y = queuedNode.nodeName.y;
-            // printf("\nChecking Node (%i, %i)", pointToAdd.x, pointToAdd.y);  //    (For checking)
-
+            
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if west node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the west node of the current point to the neighbours array
@@ -245,36 +234,20 @@ void AStar(){
         {
 
             short heuCost = abs(neighbourNode[i].x - endPoint.x) + abs(neighbourNode[i].y - endPoint.y);
-            // printf("\nHeuristics of target node(%i,%i): %i", neighbourNode[i].x, neighbourNode[i].y, heuCost);              //          (for checking)
             short currWeight = queuedNode.edgeWeight + 1;
             short totalWeight = currWeight + heuCost;
 
             struct QueueItem newItem = {neighbourNode[i], queuedNode.nodeName, totalWeight, currWeight};
-            // printf("\nTotal weight: %i",  newItem.currWeight);              //          (for checking)
             queue[currQueue] = newItem; // Adds the new item in the queue
             currQueue++;                // Increments the number of items in the queue
-            // printf("    Curr Queue: %i\n", currQueue);              //          (for checking)
         }
 
-        //  for(int i = 0; i < currQueue; i++)
-        // {
-        //     printf("\nQueue %i node: (%i, %i), starting node: (%i, %i), weight: %i", i, queue[i].nodeName.x, queue[i].nodeName.y, queue[i].startNode.x, queue[i].startNode.y, queue[i].currWeight);
-        // }
         SortQueue(queue, currQueue); // To sort the queue from highest to lowest weight
-
-        //          (For checking)
-        // printf("\nSorted array");
-        // for(int i = 0; i < currQueue; i++)
-        // {
-        //     printf("\nQueue %i node: (%i, %i), starting node: (%i, %i), weight: %i", i, queue[i].nodeName.x, queue[i].nodeName.y, queue[i].startNode.x, queue[i].startNode.y, queue[i].currWeight);
-        // }
 
         // After queue is sorted
         neighbours = 0;                // Resets the number of neighbours
         currQueue -= 1;                // Subtracts 1 from the number of items in the queue
-        queuedNode = queue[currQueue]; // Sets the next node to check to the last item in the array (The one with the lowest weight)
-        // printf("\nLowest cost:(%i, %i), from: (%i, %i), with: %i", queuedNode.nodeName.x, queuedNode.nodeName.y, queuedNode.startNode.x, queuedNode.startNode.y, queuedNode.currWeight);      //          (For checking)
-        // printf("    Curr Queue: %i\n", currQueue);                                                                                //          (For checking)
+        queuedNode = queue[currQueue]; // Sets the next node to check to the last item in the array (The one with the lowest weight)                                                                               //          (For checking)
         pathTravelled[paths] = queuedNode; // Adds the next node to the paths that have been travelled to
         paths++;                           // Increments the number of paths
 
@@ -289,18 +262,14 @@ void AStar(){
     paths -= 1;                                   // Subtract 1 from the number of paths
     short route = 1;                              // Initialise the number of routes
     finalPath[0] = pathTravelled[paths].nodeName; // Set the first index of the finalPath array to the last item in the pathTravelled array
-    // printf("\nFinal: (%i, %i)", pathTravelled[paths].nodeName.x, pathTravelled[paths].nodeName.y);       //          (for checking)
-
+    
     // Appends the routes to take to the finalPath array
     while (CheckIsPoint(finalPath[route - 1], startPoint) == 0) // While the last index in the finalPath array is not the starting node
     {
-        // printf("Node now: %i", finalPath[route-1]);             //          (for checking)
         for (short i = paths; i >= 0; i--) // Iterates through the pathTravelled array backwards
         {
-            // printf("Node name: %i", pathTravelled[i].nodeName);       //          (for checking)
             if (CheckIsPoint(pathTravelled[i].nodeName, finalPath[route - 1]) == 1) // If the name of the current iteration of the pathTravelled array matches the name of the last index of the finalPath array
             {
-                // printf("add: %i\n", pathTravelled[i].nodeName);       //          (for checking)
                 finalPath[route] = pathTravelled[i].startNode; // Appends the current pathTravelled value to the finalPath array
                 route++;                                       // Increments the number of routes
                 break;
@@ -315,12 +284,6 @@ void AStar(){
         printf("(%i,%i), ", finalPath[i].x, finalPath[i].y);
     }
 
-    // To print out the direction to take to next nodes
-    printf("\nDirections: ");
-    // for (short i = route - 1; i > 0; i--)
-    // {
-    //     CalcDirection(finalPath[i], finalPath[i - 1]);
-    // }
 }
 
 short CheckIsPoint(struct Point currPoint, struct Point endPoint)
