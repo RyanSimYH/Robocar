@@ -15,6 +15,8 @@ struct Point peek(); // Return the top most element of the stack
 bool isEmpty();      // Check if the stack is in Underflow state or not
 char checkDirection(char turn);
 int nextTravelDir(short currX, short currY);
+bool verifyNodeVistited(short currX, short currY);
+struct Point getNodeWithUnvisitedRoute();
 
 char compass = 'N'; // default North
 short directionCount = 0;
@@ -61,13 +63,14 @@ int main()
     char westInput;
 
     short direction = 0; // default 0 means closed off routes.
+    short routes = 0;
 
     short currX;
     short currY;
 
     // if y means flip to 1 (open route), else n is 0 (close route)
-    printf("Enter North,East,South,West (y/n): ");
-    scanf("%c%c%c%c", &northInput, &eastInput, &southInput, &westInput);
+    printf("Enter East,South,West (y/n): ");
+    scanf("%c%c%c", &eastInput, &southInput, &westInput);
     fflush(stdin);
 
     if (westInput == 'y')
@@ -85,11 +88,6 @@ int main()
         direction += 4;
     }
 
-    if (northInput == 'y')
-    {
-        direction += 8;
-    }
-
     printf("%d", direction);
 
     if (leftSensorDistance > rightSensorDistance)
@@ -97,7 +95,6 @@ int main()
         // initialization
         struct Point point;
         point.x, point.y, currX, currY = 0;
-        push(point);
 
         // U turn
 
@@ -105,7 +102,6 @@ int main()
         graphArray[point.x][point.y] = a;
 
         arr[visitedPoints] = point;
-        visitedPoints++;
     }
 
     else if (leftSensorDistance > rightSensorDistance)
@@ -114,7 +110,6 @@ int main()
         struct Point point;
         point.x, currX = 4;
         point.y, currY = 0;
-        push(point);
 
         // U turn
 
@@ -122,64 +117,179 @@ int main()
         graphArray[point.x][point.y] = a;
 
         arr[visitedPoints] = point;
+    }
+
+    if (nextTravelDir(0, 0))
+    {
         visitedPoints++;
     }
-}
 
-void push(struct Point point)
-{
-    struct node *ptr = (struct node *)malloc(sizeof(struct node));
-
-    if (head == NULL)
+    while (visitedPoints < 20)
     {
-        ptr->point = point;
-        ptr->next = NULL;
-        head = ptr;
-    }
-    else
-    {
-        ptr->point = point;
-        ptr->next = head;
-        head = ptr;
-    }
-}
+        if (verifyNodeVistited(currX, currY) == true)
+        {
+            if (graphArray[currX][currY].routes != 0)
+            {
+                nextTravelDir(currX, currY);
+            }
+            else
+            {
+                struct Point endpoint = getNodeWithUnvisitedRoute();
 
-struct Point pop()
-{
-    struct Point item;
-    struct node *ptr;
-    if (head == NULL)
-        printf("Underflow State: can't remove any item");
-    else
-    {
-        item = head->point;
-        ptr = head;
-        head = head->next;
-        free(ptr);
-        printf("%d,%d is popped out of the stack", item.x, item.y);
-        return item;
-    }
-    struct Point point;
-    point.x, point.y = -1;
-    return point;
-}
+                // call AStar function
+                currX = endpoint.x;
+                currY = endpoint.y;
+            }
+        }
+        else
+        {
+            direction, routes = 0;
+            if (compass == 'N')
+            {
+                // if y means flip to 1 (open route), else n is 0 (close route)
+                printf("Enter North (y/n): ");
+                scanf("%c", &northInput);
+                fflush(stdin);
+                printf("Enter East (y/n): ");
+                scanf("%c", &eastInput);
+                fflush(stdin);
+                printf("Enter West (y/n): ");
+                scanf("%c", &westInput);
+                fflush(stdin);
 
-struct Point peek()
-{
-    struct Point x = head->point;
-    printf("%d, %d is the top most element of the stack\n", x.x, x.y);
-    return x;
-}
+                if (westInput == 'y')
+                {
+                    direction++;
+                    routes++;
+                }
 
-bool isEmpty()
-{
-    if (head == NULL)
-    {
-        printf("Stack is empty: Underflow State\n");
-        return true;
+                if (eastInput == 'y')
+                {
+                    direction += 4;
+                    routes += 4;
+                }
+
+                if (northInput == 'y')
+                {
+                    direction += 8;
+                    routes += 8;
+                }
+
+                direction += 2;
+            }
+            else if (compass == 'E')
+            {
+                // if y means flip to 1 (open route), else n is 0 (close route)
+                printf("Enter North (y/n): ");
+                scanf("%c", &northInput);
+                fflush(stdin);
+                printf("Enter East (y/n): ");
+                scanf("%c", &eastInput);
+                fflush(stdin);
+                printf("Enter South (y/n): ");
+                scanf("%c", &southInput);
+                fflush(stdin);
+
+                if (southInput == 'y')
+                {
+                    direction += 2;
+                    routes += 2;
+                }
+
+                if (eastInput == 'y')
+                {
+                    direction += 4;
+                    routes += 4;
+                }
+
+                if (northInput == 'y')
+                {
+                    direction += 8;
+                    routes += 8;
+                }
+
+                direction++;
+            }
+
+            else if (compass == 'S')
+            {
+                // if y means flip to 1 (open route), else n is 0 (close route)
+                printf("Enter East (y/n): ");
+                scanf("%c", &eastInput);
+                fflush(stdin);
+                printf("Enter South (y/n): ");
+                scanf("%c", &southInput);
+                fflush(stdin);
+                printf("Enter West (y/n): ");
+                scanf("%c", &westInput);
+                fflush(stdin);
+
+                if (westInput == 'y')
+                {
+                    direction++;
+                    routes++;
+                }
+
+                if (southInput == 'y')
+                {
+                    direction += 2;
+                    routes += 2;
+                }
+
+                if (eastInput == 'y')
+                {
+                    direction += 4;
+                    routes += 4;
+                }
+
+                direction += 8;
+            }
+
+            else if (compass == 'W')
+            {
+                // if y means flip to 1 (open route), else n is 0 (close route)
+                printf("Enter North (y/n): ");
+                scanf("%c", &northInput);
+                fflush(stdin);
+                printf("Enter South (y/n): ");
+                scanf("%c", &southInput);
+                fflush(stdin);
+                printf("Enter West (y/n): ");
+                scanf("%c", &westInput);
+                fflush(stdin);
+
+                if (westInput == 'y')
+                {
+                    direction++;
+                    routes++;
+                }
+
+                if (southInput == 'y')
+                {
+                    direction += 2;
+                    routes += 2;
+                }
+
+                if (northInput == 'y')
+                {
+                    direction += 8;
+                    routes += 8;
+                }
+
+                direction += 4;
+            }
+
+            struct GraphNode a = {1, direction, routes};
+            graphArray[currX][currY] = a;
+            if (nextTravelDir(currX, currY))
+            {
+                visitedPoints++;
+            }
+        }
     }
-    printf("Stack is not empty\n");
-    return false;
+
+    // raise and send mapping finished interrupt to comms
+    // receive end point from comms
 }
 
 int nextTravelDir(short currX, short currY)
@@ -236,10 +346,19 @@ int nextTravelDir(short currX, short currY)
         // current x - 1
 
         return 4;
+    }
 
-        //if routes are all zero
-        //change direction(r)
-        //change direction(r)
+    if (graphArray[currX][currY].routes == 0) // Checks if west node can be travelled to
+    {
+        // u-turn
+        // change direction(r)
+        // change direction(r)
+
+        // move forward 27cm
+
+        // currDir if N (y-1), E(x+1), S(y+1), W(x-1)
+
+        return 4;
     }
 }
 
@@ -329,19 +448,19 @@ bool changeDirection(char currentDirection, char intendedDirection)
         // u turn
         checkDirection('R');
         checkDirection('R');
-        //getDirection
-        //check through
+        // getDirection
+        // check through
     }
 }
 
-struct Point getNodeWithUnvisitedRoute(struct Point arr[20], struct GraphNode graphArray)
+struct Point getNodeWithUnvisitedRoute()
 {
 
     for (int i = 0; i < 20; i++)
     {
         if (graphArray[arr[i].x][arr[i].y].routes != 0)
         {
-            return arr[i].x, arr[i].y;
+            return arr[i];
         }
     }
 }
@@ -361,8 +480,4 @@ bool verifyNodeVistited(short currX, short currY)
             return false;
         }
     }
-}
-
-void updateGraphNode(short currX, short currY)
-{
 }
