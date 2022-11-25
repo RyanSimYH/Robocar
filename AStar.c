@@ -72,8 +72,8 @@ int main()
     // CalcDirection('W', 'S');
     // CalcDirection('W', 'W');
 
-    // DummyNodes();
-    // AStar();
+    DummyNodes();
+    AStar();
 
 }
 
@@ -264,18 +264,18 @@ void AStar(){
     finalPath[0] = pathTravelled[paths].nodeName; // Set the first index of the finalPath array to the last item in the pathTravelled array
     
     // Appends the routes to take to the finalPath array
-    while (CheckIsPoint(finalPath[route - 1], startPoint) == 0) // While the last index in the finalPath array is not the starting node
-    {
+    // while (CheckIsPoint(finalPath[route - 1], startPoint) == 0) // While the last index in the finalPath array is not the starting node
+    // {
         for (short i = paths; i >= 0; i--) // Iterates through the pathTravelled array backwards
         {
             if (CheckIsPoint(pathTravelled[i].nodeName, finalPath[route - 1]) == 1) // If the name of the current iteration of the pathTravelled array matches the name of the last index of the finalPath array
             {
                 finalPath[route] = pathTravelled[i].startNode; // Appends the current pathTravelled value to the finalPath array
                 route++;                                       // Increments the number of routes
-                break;
+
             }
         }
-    }
+    //}
 
     // To print out the route to take
     printf("\n\nFinal Path: ");

@@ -3,7 +3,7 @@
 #include <stdbool.h>
 
 #define maxsize 4
-#define maxarraysize 50
+#define maxarraysize 25
 #define NORTHCHECK 7
 #define EASTCHECK 11
 #define SOUTHCHECK 13
@@ -64,9 +64,6 @@ char compass = 'N'; // default North
 short directionCount = 0;
 
 // Scan and then U-Turn
-
-
-struct node *head;
 
 short xPoints = 5;
 short yPoints = 4;
@@ -150,8 +147,6 @@ int main()
     if (nextTravelDir(startpoint.x, startpoint.y))
     {
         visitedPoints++;
-        printf("Visited points: %d\n",visitedPoints);
-        //printf("StartPoint: %d, %d\n",arr[0].x, arr[0].y);
     }
 
     while (visitedPoints < 20)
@@ -162,16 +157,23 @@ int main()
         {
            printf("(%d, %d)  ", arr[i].x, arr[i].y);        
         }
+           printf("\n");
+    for (short j = 0; j < xPoints; j++)
+    { 
+        printf(((graphArray[j][0].directions | NORTHCHECK) != ACCESSIBLE) ? " ___ " : "    ");
+    }
+
+    for (short i = 0; i < yPoints; i++)
+    {
         printf("\n");
-        for (short i = 0; i < yPoints; i++)
+        for (short j = 0; j < xPoints; j++)
         {
-            printf("\n");
-            for (short j = 0; j < xPoints; j++)
-            {
-                printf("(%d, %d): %d    ", j, i,graphArray[j][i].directions);
-               
-            }          
+            printf(((graphArray[j][i].directions | WESTCHECK) != ACCESSIBLE) ? "|" : " ");
+            printf(((graphArray[j][i].directions | SOUTHCHECK) != ACCESSIBLE) ? "___ " : "    ");
         }
+
+        printf(((graphArray[xPoints - 1][i].directions | EASTCHECK) != ACCESSIBLE) ? "|" : " ");
+    }
         if (verifyNodeVistited(currX, currY) == true)
         {
             if (graphArray[currX][currY].routes != 0)
@@ -182,9 +184,7 @@ int main()
             {
                 printf("routes: %d", graphArray[currX][currY].routes);
                 struct Point endpoint = getNodeWithUnvisitedRoute();
-
-                // call AStar function
-                printf("A STAR HERE");
+                printf("\nA STAR HERE");
                 AStar(currX,currY,endpoint);
                 currX = endpoint.x;
                 currY = endpoint.y;
@@ -366,16 +366,12 @@ int nextTravelDir(short xPoint, short yPoint)
 {
     if ((graphArray[xPoint][yPoint].routes | NORTHCHECK) == ACCESSIBLE) // Checks if north node can be travelled to
     {
-        // go north
-
         //Remove north from routes in struct
         graphArray[xPoint][yPoint].routes -= NORTHTOGGLE;
-        // how to turn
         HowToTurn(compass,'N');
         printf("NORTH\n");
         // move forward 27cm
 
-        // current y - 1
         currY-=1;
         return 1;
     }
@@ -383,15 +379,12 @@ int nextTravelDir(short xPoint, short yPoint)
     if ((graphArray[xPoint][yPoint].routes | EASTCHECK) == ACCESSIBLE) // Checks if east node can be travelled to
     {
         // go east
-
         //Remove east from routes in struct
         graphArray[xPoint][yPoint].routes -= EASTTOGGLE;
-        // how to turn
         HowToTurn(compass,'E');
         printf("EAST\n");
         // move forward 27cm
 
-        // current x + 1
         currX +=1;
         return 2;
     }
@@ -399,15 +392,13 @@ int nextTravelDir(short xPoint, short yPoint)
     if ((graphArray[xPoint][yPoint].routes | SOUTHCHECK) == ACCESSIBLE) // Checks if south node can be travelled to
     {
         // go south
-
         //Remove south from routes in struct
         graphArray[xPoint][yPoint].routes -= SOUTHTOGGLE;
-        // how to turn
         HowToTurn(compass,'S');
         printf("SOUTH\n");
         // move forward 27cm
 
-        // current y + 1
+
         currY +=1;
         return 3;
     }
@@ -415,15 +406,12 @@ int nextTravelDir(short xPoint, short yPoint)
     if ((graphArray[xPoint][yPoint].routes | WESTCHECK) == ACCESSIBLE) // Checks if west node can be travelled to
     {
         // go west
-
         //Remove west from routes in struct
         graphArray[xPoint][yPoint].routes -= WESTTOGGLE;
-        // how to turn
         HowToTurn(compass,'W');
         printf("WEST\n");
         // move forward 27cm
 
-        // current x - 1
         currX-=1;
         return 4;
     }
@@ -541,13 +529,11 @@ void AStar(short currX, short currY, struct Point endPoint){
 
     while (CheckIsPoint(queuedNode.nodeName, endPoint) == 0) // If the current node to check is not the goal node
     {
-        printf("\n\nChecking Node (%i, %i): %i", queuedNode.nodeName.x, queuedNode.nodeName.y, graphArray[queuedNode.nodeName.x][queuedNode.nodeName.x].directions); //    (For checking)
-
         if ((graphArray[queuedNode.nodeName.x][queuedNode.nodeName.y].directions | NORTHCHECK) == ACCESSIBLE) // Checks if north node can be travelled to
         {
+            
             pointToAdd.x = queuedNode.nodeName.x;
             pointToAdd.y = queuedNode.nodeName.y - 1;
-            
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if north node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the north node of the current point to the neighbours array
@@ -561,7 +547,7 @@ void AStar(short currX, short currY, struct Point endPoint){
         {
             pointToAdd.x = queuedNode.nodeName.x + 1;
             pointToAdd.y = queuedNode.nodeName.y;
-            
+           
             if (graphArray[pointToAdd.x][pointToAdd.y].checked != 3) // Checks if east node has been checked before
             {
                 neighbourNode[neighbours] = pointToAdd;             // Add the east node of the current point to the neighbours array
@@ -626,6 +612,7 @@ void AStar(short currX, short currY, struct Point endPoint){
             printf("\nPath %i, travelled: (%i, %i) from: (%i, %i)", i, pathTravelled[i].nodeName.x, pathTravelled[i].nodeName.y, pathTravelled[i].startNode.x, pathTravelled[i].startNode.y);
         }
     }
+    
     // After the goal has been reached
     struct Point finalPath[paths];                // Initialise an array for the final path to take
     paths -= 1;                                   // Subtract 1 from the number of paths
@@ -633,28 +620,65 @@ void AStar(short currX, short currY, struct Point endPoint){
     finalPath[0] = pathTravelled[paths].nodeName; // Set the first index of the finalPath array to the last item in the pathTravelled array
     
     // Appends the routes to take to the finalPath array
-    while (CheckIsPoint(finalPath[route - 1], startpoint) == 0) // While the last index in the finalPath array is not the starting node
-    {
+   // while (CheckIsPoint(finalPath[route - 1], startpoint) == 0) // While the last index in the finalPath array is not the starting node
+    //{
         for (short i = paths; i >= 0; i--) // Iterates through the pathTravelled array backwards
         {
             if (CheckIsPoint(pathTravelled[i].nodeName, finalPath[route - 1]) == 1) // If the name of the current iteration of the pathTravelled array matches the name of the last index of the finalPath array
             {
                 finalPath[route] = pathTravelled[i].startNode; // Appends the current pathTravelled value to the finalPath array
                 route++;                                       // Increments the number of routes
-                break;
+               // break;
             }
         }
-    }
+   // }
+
 
     // To print out the route to take
     printf("\n\nFinal Path: ");
-    for (short i = route - 1; i >= 0; i--)
+    for (short i = route - 1; i > 0; i--)
     {
         printf("(%i,%i), ", finalPath[i].x, finalPath[i].y);
+ 
+        if(finalPath[i].x > finalPath[i-1].x)
+        {
+            //go west
+            HowToTurn(compass,'W');
+        }
+        else if (finalPath[i-1].x > finalPath[i].x) 
+        {
+            //go east
+            HowToTurn(compass,'E');
+        }   
+        else if (finalPath[i-1].y > finalPath[i].y) 
+        {
+            //go south
+            HowToTurn(compass,'S');
+        }
+        else if (finalPath[i].y > finalPath[i-1].y) 
+        {
+            //go north
+            HowToTurn(compass,'N');
+        }
+
+    }
+
+    printf("(%i,%i), ", finalPath[0].x, finalPath[0].y);
+
+
+    //resets the checked variable of graphArray
+    for (short i = 0; i < yPoints; i++)
+    {
+        printf("\n");
+        for (short j = 0; j < xPoints; j++)
+        {
+            graphArray[j][i].checked = 1;
+
+        }
     }
 }
 
-short CheckIsPoint(struct Point currPoint, struct Point endPoint)
+short CheckIsPoint(struct Point currPoint, struct Point endPoint)   //Check if the current point is equal to the endpoint
 {
     if (currPoint.x == endPoint.x && currPoint.y == endPoint.y)
     {
