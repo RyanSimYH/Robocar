@@ -2,13 +2,13 @@
 
 ## Link To the submodules & its videos
 
-| Sub-modules                  | Code                            | Video                                        | Remmarks                                    |
-| ---------------------------- | ------------------------------- | -------------------------------------------- | ------------------------------------------- |
-| Motor                        | [LINK HERE](/pwm_pid)           |                                              |                                             |
-| Infrared (Encoder & Barcode) | Barcode : [LINK HERE](/barcode) | [Youtube Link](https://youtu.be/kg3en9Gp8Qk) | Wheel encoder code in MSP with motor folder |
-| Ultrasonic & Accelerometer   |                                 |                                              |                                             |
-| Communications               |                                 |                                              |                                             |
-| Mapping & Navigation         |                                 |                                              |                                             |
+| Sub-modules                  | Code                            | Remmarks                                     |
+| ---------------------------- | -------------------------------- | ------------------------------------------- |
+| Motor                        | [LINK HERE](/pwm_pid)           |                                              |
+| Infrared (Encoder & Barcode) | Barcode : [LINK HERE](/barcode) | Wheel encoder code in MSP with motor folder |
+| Ultrasonic & Accelerometer   | [UltraSonic LINK HERE](/ultrasonic) <br/>  [Accelerometer LINK HERE](/accelerometer)                               |                                              |                                         
+| Communications               |  [UltraSonic LINK HERE](/communication)                               |                                              |                                         
+| Mapping & Navigation         |   [LINK HERE](/mapping-navigation)                               |                                              |                                         
 # How to Use CMake?
 Notes: for PICO
 ```
