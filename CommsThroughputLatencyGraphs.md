@@ -24,7 +24,7 @@ Based on the line of best fit, **y = 2.0831x - 0.0341**:
     (1 + 0.0341)/2.0831 = 0.49642
 Therefore, the throughput is 0.4964kBps
 
-2. Latency: Pico-HC05-UART Transmissions
+3. Latency: Pico-HC05-UART Transmissions
 // Relevant settings: 38400 baud, LSB first, no parity, one stop bit
 - Command 'AT' was sent 5 times through UART
 - Time taken for each attempt where the response is received is printed to the serial terminal
