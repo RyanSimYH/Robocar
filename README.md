@@ -2,7 +2,7 @@
 
 ## Link To the submodules & its videos
 
-| Sub-modules                  | Code                            | Remmarks                                     |
+| Sub-modules                  | Code                            | Remarks                                     |
 | ---------------------------- | -------------------------------- | ------------------------------------------- |
 | Motor                        | [Go to Motor](/pwm_pid)           |                                              |
 | Infrared (Encoder & Barcode) | [Go to Barcode](/barcode) | Wheel encoder code in MSP with motor folder |
@@ -20,7 +20,7 @@ cmake ..
 ## References
 Note: This is to link to references if any
 
-| Sub-modules                  | LINK                                                                                                                                                                                        | Remmarks                                                                                   |
+| Sub-modules                  | LINK                                                                                                                                                                                        | Remarks                                                                                   |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Motor                        |                                                                                                                                                                                             |                                                                                            |
 | Infrared (Encoder & Barcode) | [Tenth-term average filter](https://www.sciencedirect.com/topics/engineering/moving-average-filter) <br/>[Calculation for Recursive Filter](https://en.wikipedia.org/wiki/Recursive_filter) | Tenth Term Average and Recursive Filter Mathematical Algorithm is ideate through research. |
