@@ -109,33 +109,16 @@ void main(void)
             MSPrintf(EUSCI_A2_BASE, testBuffer);
             Timer_A_stopTimer(TIMER_A0_BASE);
             sprintf(timeData, "%d", getTime());
+            intTimes /= 2;
 
             /*Send data to serial terminal*/
-            MSPrintf(EUSCI_A0_BASE, "Attempt %i, %i bytes, time: ", i, bufferSize);
+            MSPrintf(EUSCI_A0_BASE, "Attempt %i, %i bytes, time: %i.", i, bufferSize, intTimes);
             MSPrintf(EUSCI_A0_BASE, timeData);
-            MSPrintf(EUSCI_A0_BASE, "\n");
+            MSPrintf(EUSCI_A0_BASE, "\r\n");
 
             intTimes = 0;
         }
     }
-//
-//    while(1)
-//    {
-//        /*Get data from MSP432 PC UART*/
-//        MSPrintf(EUSCI_A0_BASE, "Enter data to be sent to HC-05: ");
-//        MSPgets(EUSCI_A0_BASE, Buffer, BUFFER_SIZE);
-//        MSPrintf(EUSCI_A0_BASE, "\r\n");
-//
-//        /*Send data to HC-05*/
-//        MSPrintf(EUSCI_A2_BASE, Buffer);
-//
-//        /*Get data from HC-05*/
-//        MSPrintf(EUSCI_A0_BASE, "Waiting for HC-05 response...\r\n");
-//        MSPgets(EUSCI_A2_BASE, Buffer, BUFFER_SIZE);
-//
-//        /*Send data to serial terminal*/
-//        MSPrintf(EUSCI_A0_BASE, "Data received from HC-05: %s\r\n", Buffer);
-//    }
 	
 }
 
@@ -145,7 +128,7 @@ static unsigned long getTime(void)
     unsigned long timetaken=0;
     timetaken = 0;
     /* Number of times the interrupt occurred (1 interrupt = 1000 ticks)    */
-    timetaken = intTimes * TICKPERIOD;
+//    timetaken = intTimes * TICKPERIOD;
 
     /* Number of ticks (between 1 to 999) before the interrupt could occur */
     timetaken += Timer_A_getCounterValue(TIMER_A0_BASE);
@@ -153,6 +136,7 @@ static unsigned long getTime(void)
     /* Clear Timer */
     Timer_A_clearTimer(TIMER_A0_BASE);
 
+//    timetaken /= 2;
     return timetaken;
 }
 
