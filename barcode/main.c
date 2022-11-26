@@ -5,6 +5,7 @@
  *
  * SPDX-License-Identifier: BSD-3-Clause
  * Code 39 Barcode Reader
+ * Team-B2
  */
 
 #include <stdio.h>
@@ -13,12 +14,13 @@
 #include "hardware/gpio.h"
 #include "hardware/adc.h"
 
-#define k_const 0.5
+#define K_CONST 0.5
 #define IR_GPIO 26
 #define SAMPLE_COUNT 5
 #define BLACK 1
 #define WHITE 0
-#define THRESHOLD 0.031
+// #define THRESHOLD 0.031
+#define THRESHOLD 0.034
 // Lookup table for the code39
 static const uint32_t g_barcode_lookup_table[44] = {
     111221211, 211211112, 112211112, 212211111, 111221112,
@@ -43,29 +45,26 @@ static const char g_barcode_lookup_match[44] = {
     'Z', '-', '.', ' ', '$',
     '/', '+', '%', '*'};
 
-static uint8_t g_sample_index = 0;       // Indexing for Sampling
-static int16_t g_barcode_bar_index = -1; // Barcode not detected yet.
-static uint8_t g_previous_bin = 1;       // 0 for white 1 for black, Starts off black
-static float g_average_data = 0;         // Average Data of Sample
-static uint16_t g_barcode_array[30];     // Array to store the data of barcode
-
 // Function used to decode binary
-void decodeBarcode();
+void decodeBarcode(uint16_t barcode_index, uint16_t barcode_arr[30]);
 
 // Used to find Maxmimum value detected for narrow bar
 uint16_t findMax(uint16_t secondData, uint16_t thirdData, uint16_t fourthData, uint16_t fifthData, uint16_t sixthData);
 
 /**
  * Digital Filter
- * Using A specific number samples to get 1 result
- * Result per specific number of sample is
- * duration of timer interrupt * SAMPLE_COUNT
- * Using the voltage to determine black and white
+ * Using a specific algorithm to calculate
+ * By combining 2 different digital filtering
  */
 bool repeating_timer_callback(struct repeating_timer *t)
 {
+    static uint8_t sample_index = 0;   // Indexing for Sampling
+    static int16_t barcode_index = -1; // Barcode not detected yet.
+    static uint8_t previous_bin = 1;   // 0 for white 1 for black, Starts off black
+    static uint16_t barcode_array[30]; // Array to store the data of barcode
+    static float average_data = 0;     // Average Data of Sample
 
-    if (g_barcode_bar_index < 20)
+    if (barcode_index < 20)
     {
         // PICO 12 bit ADC - 4096 taking for the adc voltage used 3.3v
         const float conversion_factor = 3.3f / 4096;
@@ -76,79 +75,77 @@ bool repeating_timer_callback(struct repeating_timer *t)
         float voltage = result * conversion_factor;
 
         // Check if index of sample is sample count
-        if (g_sample_index < SAMPLE_COUNT)
+        if (sample_index < SAMPLE_COUNT)
         {
-            // g_average_data += voltage;
-            g_average_data = k_const * voltage + (1.0 - k_const) * g_average_data;
+            // Algorithm to first Filter with equations
+            average_data = K_CONST * voltage + (1.0 - K_CONST) * average_data;
 
-            g_sample_index++;
+            sample_index++;
         }
         else
         {
 
-            // Get average data from sample for digital filtering.
-            g_average_data /= SAMPLE_COUNT;
-            // printf("\%f \n", g_average_data);
+            // Get average data from sample for digital filtering 2.
+            average_data /= SAMPLE_COUNT;
 
             // Note : modify the value to fit the environment
-            if (g_average_data > THRESHOLD)
+            if (average_data > THRESHOLD)
             {
                 // Black Detected
-                // printf("black : %f \n", g_average_data);
 
-                if (g_previous_bin == WHITE)
+                if (previous_bin == WHITE)
                 {
-                    printf("Bar detected : %d \n", g_barcode_array[g_barcode_bar_index - 1]);
-                    g_barcode_bar_index++;
-                    g_previous_bin = BLACK;
+                    printf("Bar detected : %d \n", barcode_array[barcode_index - 1]);
+                    barcode_index++;
+                    previous_bin = BLACK;
                 }
             }
             else
             {
                 // White Detected
-                // printf("white : %f", g_average_data);
 
                 // To determine if barcode has started scanning.
-                if (g_barcode_bar_index == -1)
+                if (barcode_index == -1)
                 {
-                    g_barcode_bar_index++;
-                    g_previous_bin = WHITE;
+                    barcode_index++;
+                    previous_bin = WHITE;
                 }
                 else
                 {
                     // Check if previo
-                    if (g_previous_bin == BLACK)
+                    if (previous_bin == BLACK)
                     {
 
-                        printf("Bar detected : %d \n", g_barcode_array[g_barcode_bar_index - 1]);
+                        printf("Bar detected : %d \n", barcode_array[barcode_index - 1]);
 
-                        g_barcode_bar_index++;
-                        g_previous_bin = WHITE;
+                        barcode_index++;
+                        previous_bin = WHITE;
                     }
                 }
             }
 
-            if (g_barcode_bar_index != -1)
+            if (barcode_index != -1)
             {
-                g_barcode_array[g_barcode_bar_index] += 1;
+                barcode_array[barcode_index] += 1;
             }
 
             // Reset Average Data and Sample Index
-            g_average_data = 0;
+            average_data = 0;
 
-            g_sample_index = 0;
+            sample_index = 0;
         }
     }
     else
     {
+        // Decode barcode
         printf("Decoding barcode in progress ...\n");
-        decodeBarcode();
+        decodeBarcode(barcode_index, barcode_array);
 
         printf("Clearing Barcode Memory...\n");
 
-        memset(g_barcode_array, 0, sizeof g_barcode_array);
+        memset(barcode_array, 0, sizeof barcode_array);
 
-        g_barcode_bar_index = -1;
+        barcode_index = -1;
     }
     return true;
 }
@@ -180,21 +177,21 @@ int main()
         tight_loop_contents();
     }
 }
-void decodeBarcode()
+void decodeBarcode(uint16_t barcode_index, uint16_t barcode_arr[30])
 {
     // Code 39 Start and End will always Contain this binary 1000101110111010
-    if (g_barcode_bar_index >= 20)
+    if (barcode_index >= 20)
     {
         uint16_t min = 0;
         uint32_t barcodeValue = 0;
         uint8_t barcodeIndex = 9;
-        uint16_t firstMax = findMax(g_barcode_array[3], g_barcode_array[4], g_barcode_array[6], g_barcode_array[8], g_barcode_array[10]);
+        uint16_t firstMax = findMax(barcode_arr[3], barcode_arr[4], barcode_arr[6], barcode_arr[8], barcode_arr[10]);
 
         // Decode Normally
         for (int i = 11; i < 20; i++)
         {
             int temp_value = 0;
-            if (g_barcode_array[i] > firstMax)
+            if (barcode_arr[i] > firstMax)
             {
                 temp_value = 2;
             }
