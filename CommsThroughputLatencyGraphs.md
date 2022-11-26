@@ -11,7 +11,30 @@ Based on the line of best fit, **y = 0.1731x - 0.0001**:
     (y + 0.0001)/0.1731 = 1.0001/0.1731 = 5.778
 Therefore, the throughput of MSP-UART transmissions, based on our configurations, is 5.778kBps
 
-2. Throughput: Pico-HC05-UART Transmissions
+2. Throughput: MSP-HC05-UART Transmissions
+// Relevant settings: 9600 baud, LSB first, no parity, one stop bit
+- We sent char arrays of various lengths (2k, 4k, 6k, 8k, 10k) through UART
+- Each length of char array was sent 5 times, and we used the average time taken for each array length for our plotting
+- Time taken for each attempt is printed to the serial terminal
+- Time taken refers to the time for the UART transfer function to be completed (recorded via timerA)
+![msp_ble_tp](https://user-images.githubusercontent.com/81850188/204087067-5858af22-cb1d-48a6-9d30-08e837531a48.png)
+
+Based on the line of best fit, **y = 2.0811x - 0.0014**:
+  If y = 1 second, amount of data we can transmit (x) is
+    (1 + 0.0014)/2.0811 = 0.4812
+Therefore, the throughput is 0.4812kBps
+
+3. Latency: MSP-HC05-UART Transmissions
+// Relevant settings: 38400 baud, LSB first, no parity, one stop bit
+- Command 'AT' was sent 5 times through UART
+- Time taken for each attempt where the response is received is printed to the serial terminal
+- Time taken refers to the time for the command to be sent to HC05 and respond back with OK (recorded via timerA)
+![msp_ble_lt](https://user-images.githubusercontent.com/81850188/204087141-a72fe6ee-b856-4f35-aca1-67ffb20765a2.png)
+
+Based on the graph,
+  The average latency is 2.473ms and transfer speed could be slower or faster based on a variance of 0.5us.
+
+4. Throughput: Pico-HC05-UART Transmissions
 // Relevant settings: 9600 baud, LSB first, no parity, one stop bit
 - We sent char arrays of various lengths (2k, 4k, 6k, 8k, 10k) through UART
 - Each length of char array was sent 5 times, and we used the average time taken for each array length for our plotting
@@ -24,7 +47,7 @@ Based on the line of best fit, **y = 2.0831x - 0.0341**:
     (1 + 0.0341)/2.0831 = 0.49642
 Therefore, the throughput is 0.4964kBps
 
-3. Latency: Pico-HC05-UART Transmissions
+5. Latency: Pico-HC05-UART Transmissions
 // Relevant settings: 38400 baud, LSB first, no parity, one stop bit
 - Command 'AT' was sent 5 times through UART
 - Time taken for each attempt where the response is received is printed to the serial terminal
