@@ -4,11 +4,11 @@
 
 | Sub-modules                  | Code                            | Remmarks                                     |
 | ---------------------------- | -------------------------------- | ------------------------------------------- |
-| Motor                        | [LINK HERE](/pwm_pid)           |                                              |
-| Infrared (Encoder & Barcode) | Barcode : [LINK HERE](/barcode) | Wheel encoder code in MSP with motor folder |
-| Ultrasonic & Accelerometer   | [UltraSonic LINK HERE](/ultrasonic) <br/>  [Accelerometer LINK HERE](/accelerometer)                               |                                              |                                         
-| Communications               |  [UltraSonic LINK HERE](/communication)                               |                                              |                                         
-| Mapping & Navigation         |   [LINK HERE](/mapping-navigation)                               |                                              |                                         
+| Motor                        | [Go to Motor](/pwm_pid)           |                                              |
+| Infrared (Encoder & Barcode) | [Go to Barcode](/barcode) | Wheel encoder code in MSP with motor folder |
+| Ultrasonic & Accelerometer   | [Go to Ultrasonic](/ultrasonic) <br/>  [Go to Accelerometer](/accelerometer)                               |                                              |                                         
+| Communications               |  [Go to Communications](/communication)                               |                                              |                                         
+| Mapping & Navigation         |   [Go to Mapping & Navigation](/mapping-navigation)                               |                                              |                                         
 # How to Use CMake?
 Notes: for PICO
 ```
