@@ -24,3 +24,21 @@ mkdir build
 cd build
 cmake ..
 ```
+
+# Voltage Graph
+
+## Moving
+
+![Moving](/barcode/graph_moving.png)
+
+## Stationary on Black Bar
+
+![SBB](/barcode/graph_stationary_bb.png)
+
+## Stationary on White Bar
+
+![SWB](/barcode/graph_stationary_wb.png)
+
+# Flow Chart
+
+![CHART](/barcode/barcode_flowchart.png)
