@@ -59,11 +59,15 @@ void AStar(short currX, short currY, struct Point endPoint);
 short CheckIsPoint(struct Point currPoint, struct Point endPoint);
 void SortQueue(struct QueueItem queue[], short end);
 void Swapper(struct QueueItem queue[], short currIndex);
+short CheckIfBlocked();
+int GetXPoint();
+int GetYPoint();
 
 char compass = 'N'; // default North
 short directionCount = 0;
 
-// Scan and then U-Turn
+char directionString[15]  = {'<','v','J','>','=','.','m','^','`','L','3','l','w','E','+'};
+char routeDirString[20];
 
 short xPoints = 5;
 short yPoints = 4;
@@ -359,6 +363,23 @@ int main()
         }
 
         printf(((graphArray[xPoints - 1][i].directions | EASTCHECK) != ACCESSIBLE) ? "|" : " ");
+    }
+
+    short counter = 0;
+    printf("\n");
+    for (short i = 0; i < yPoints; i++)
+    {
+        
+        for (short j = 0; j < xPoints; j++)
+        {
+            routeDirString[counter] = directionString[graphArray[j][i].directions - 1];
+            counter++;
+        }
+    }
+    printf("\n");
+    for (short i = 0; i < 20; i++)
+    {
+        printf("%c",routeDirString[i]);
     }
 }
 
@@ -706,4 +727,20 @@ void Swapper(struct QueueItem queue[], short currIndex) // To swap the values ar
     struct QueueItem temp = queue[currIndex]; // Saves the value of the unsorted item into temp
     queue[currIndex] = queue[currIndex - 1];
     queue[currIndex - 1] = temp;
+}
+
+short CheckIfBlocked()
+{
+    //take in ultrasonic
+
+}
+
+int GetXPoint()
+{
+    return currX;
+}
+
+int GetYPoint()
+{
+    return currY;
 }
