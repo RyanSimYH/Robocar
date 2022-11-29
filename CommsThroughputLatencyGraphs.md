@@ -69,3 +69,12 @@ Therefore, the throughput is 0.4964kBps
 
 Based on the graph,
   The average latency is 14.0164ms and transfer speed could be slower or faster based on a variance of 1.88us.
+
+## Throughput of all configurations
+
+![image](https://user-images.githubusercontent.com/81850188/204562028-c39a83ea-9f69-40e5-8c0b-795fcd4f2f48.png)
+
+
+## Latency of all configurations
+
+![image](https://user-images.githubusercontent.com/81850188/204562832-24872276-2cc8-40a7-9472-99b08b0bf594.png)
