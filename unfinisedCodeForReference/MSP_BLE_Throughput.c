@@ -136,13 +136,6 @@ static unsigned long getTime(void)
     return timetaken;
 }
 
-// int getData(){
-//     ADC14->CTL0 |= ADC14_CTL0_SC;   // software trigger to START CONVERSION
-//     while(!(ADC14->IFGR0 & BIT0));
-//     adcValue = ADC14->MEM[0];       // read ADC14MEM0 register value, clear ADC14IFGR0
-
-// }
-
 void TA0_0_IRQHandler(void)
 {
     /* Increment global variable (count number of interrupt occurred) */
