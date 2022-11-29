@@ -1,4 +1,4 @@
-**Dashboard setup**
+#**Dashboard setup**
 1. Download Node-RED (https://nodered.org/docs/getting-started/windows)
 2. After downloading, go to command prompt and enter: node-red
 3. In your browser, open localhost:1880
