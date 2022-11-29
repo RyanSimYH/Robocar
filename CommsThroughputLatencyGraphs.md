@@ -71,8 +71,7 @@ Based on the graph,
   The average latency is 14.0164ms and transfer speed could be slower or faster based on a variance of 1.88us.
 
 ## Throughput of all configurations
-
-![image](https://user-images.githubusercontent.com/81850188/204562028-c39a83ea-9f69-40e5-8c0b-795fcd4f2f48.png)
+![image](https://user-images.githubusercontent.com/98366701/204573582-0d95ec4d-be50-4e9c-b74a-4c59ed2beef9.png)
 
 
 ## Latency of all configurations
