@@ -117,10 +117,10 @@ int main(void)
    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
 
    /* Configuring UART Module */
-   UART_initModule(EUSCI_A0_BASE, &uartConfig);
+   UART_initModule(EUSCI_A2_BASE, &uartConfig);
 
    /* Enable UART module */
-   UART_enableModule(EUSCI_A0_BASE);
+   UART_enableModule(EUSCI_A2_BASE);
 
    uPrintf("program start PID \n\r");
 
@@ -155,10 +155,12 @@ int main(void)
     /* Configuring Timer_A to have a period of approximately 80ms and an initial duty cycle of 10% of that (1000 ticks)  */
 
     // Setting up interrupt for Left Encoder (P4.1)
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P4, GPIO_PIN1);
     GPIO_clearInterruptFlag(GPIO_PORT_P4, GPIO_PIN1);
     GPIO_enableInterrupt(GPIO_PORT_P4, GPIO_PIN1);
     Interrupt_enableInterrupt(INT_PORT4);
     // Setting up interrupt for Right Encoder (P2.5)
+    GPIO_setAsInputPinWithPullUpResistor(GPIO_PORT_P2, GPIO_PIN5);
     GPIO_clearInterruptFlag(GPIO_PORT_P2, GPIO_PIN5);
     GPIO_enableInterrupt(GPIO_PORT_P2, GPIO_PIN5);
     Interrupt_enableInterrupt(INT_PORT2);
@@ -168,8 +170,9 @@ int main(void)
     Interrupt_enableInterrupt(INT_TA1_0);
     Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
 
-    UART_enableInterrupt(EUSCI_A0_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
-    Interrupt_enableInterrupt(INT_EUSCIA0);
+    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3 , GPIO_PRIMARY_MODULE_FUNCTION);
+    UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
+    Interrupt_enableInterrupt(INT_EUSCIA2);
     Interrupt_enableMaster();
 
 
@@ -179,7 +182,7 @@ int main(void)
     Interrupt_enableMaster();
 
     //set notch speed
-    presetNotch(true, 10);
+    presetNotch(true, 7);
 
 
 
@@ -286,9 +289,9 @@ void PORT4_IRQHandler(void) //This function will be triggered if there is an int
     GPIO_clearInterruptFlag(GPIO_PORT_P4, statusL); //Clear interrupt flag for Port 3
 }
 
-void EUSCIA0_IRQHandler(void){
+void EUSCIA2_IRQHandler(void){
     unsigned char a = 0;
-    a = UART_receiveData(EUSCI_A0_BASE);
+    a = UART_receiveData(EUSCI_A2_BASE);
     if (a == 119) //W
     {
         carForward();
@@ -366,11 +369,11 @@ void TA1_0_IRQHandler(void)
     uPrintf(buffer);
     uPrintf("\n\r");
 
-    if (numSample > 2)
+    if (numSample >= 0)
     { // Initial 2 seconds are not measured for calibration purposes
         if(diffL != 0) // If the difference between the preset notches - number of left notches is not 0
         {
-            integralL += (diffL * 0.5); //Increment integralL by error difference multiplied by the timer interval unit
+            integralL += diffL; //Increment integralL by error difference multiplied by the timer interval unit
 
             dcL = (increment * diffL) + (Ki * integralL) + (Kd * (diffL - lasterrorL)); //Duty cycle = P + I + D
             // increment is constant p, the proportional gain, for every unit of error (diffL), how much you going to ramp up by (increment)
@@ -380,7 +383,7 @@ void TA1_0_IRQHandler(void)
         }
         if(diffR != 0)
         {
-            integralR += (diffR * 0.5); // Increment integralR by error difference multiplied by the timer interval unit
+            integralR += diffR; // Increment integralR by error difference multiplied by the timer interval unit
 
             dcR = (increment * diffR) + (Ki*integralR) + (Kd * (diffR - lasterrorR));
 
@@ -585,7 +588,7 @@ void uPrintf(unsigned char * TxArray)
     unsigned short i = 0;
     while(*(TxArray+i))
     {
-        UART_transmitData(EUSCI_A0_BASE, *(TxArray+i));  // Write the character at the location specified by pointer
+        UART_transmitData(EUSCI_A2_BASE, *(TxArray+i));  // Write the character at the location specified by pointer
         i++;                                             // Increment pointer to point to the next character
     }
 

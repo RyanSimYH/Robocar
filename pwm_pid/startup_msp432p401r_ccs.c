@@ -59,7 +59,7 @@ void TA1_0_IRQHandler(void);
 void PORT1_IRQHandler(void);
 void PORT2_IRQHandler(void);
 void PORT4_IRQHandler(void);
-void EUSCIA0_IRQHandler(void);
+void EUSCIA2_IRQHandler(void);
 /* To be added by user */
 
 
@@ -103,9 +103,9 @@ void (* const interruptVectors[])(void) =
     defaultISR,                             /* TA2_N ISR                 */
     defaultISR,                             /* TA3_0 ISR                 */
     defaultISR,                             /* TA3_N ISR                 */
-    EUSCIA0_IRQHandler,                             /* EUSCIA0 ISR               */
+    defaultISR,                             /* EUSCIA0 ISR               */
     defaultISR,                             /* EUSCIA1 ISR               */
-    defaultISR,                             /* EUSCIA2 ISR               */
+    EUSCIA2_IRQHandler,                             /* EUSCIA2 ISR               */
     defaultISR,                             /* EUSCIA3 ISR               */
     defaultISR,                             /* EUSCIB0 ISR               */
     defaultISR,                             /* EUSCIB1 ISR               */
