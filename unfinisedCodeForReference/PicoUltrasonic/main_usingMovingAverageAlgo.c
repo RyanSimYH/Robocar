@@ -5,18 +5,10 @@
 #include "pico/types.h"
 
 
-/**
-* To see the output, minicom -b 115200 -o -D /dev/ttyS3
-* 
-*/
-
-// #ifndef PICO_DEFAULT_LED_PIN
-// #error blink example requires a board with a regular LED
-// #endif
 uint led_pin = 25;
 uint C_TRIGGER_PIN = 17;
 uint C_ECHO_PIN = 16;
-uint L_TRIGGER_PIN = 18;
+uint L_TRIGGER_PIN = 22//18 was used by accelerometer;
 uint L_ECHO_PIN = 19;
 uint R_TRIGGER_PIN = 20;
 uint R_ECHO_PIN = 21;
