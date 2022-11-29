@@ -59,7 +59,7 @@ void Initialise_Timer(void)
     const Timer_A_UpModeConfig upConfig =
     {
             TIMER_A_CLOCKSOURCE_SMCLK,              // SMCLK Clock Source
-            TIMER_A_CLOCKSOURCE_DIVIDER_12,          // SMCLK/12 = 1MHz
+            TIMER_A_CLOCKSOURCE_DIVIDER_24,          // SMCLK/24 = 1MHz
             TICKPERIOD,                             // 1000 tick period = 1 millisec per tick
             TIMER_A_TAIE_INTERRUPT_DISABLE,         // Disable Timer interrupt
             TIMER_A_CCIE_CCR0_INTERRUPT_ENABLE ,    // Enable CCR0 interrupt
@@ -109,7 +109,6 @@ void main(void)
             MSPrintf(EUSCI_A2_BASE, testBuffer);
             Timer_A_stopTimer(TIMER_A0_BASE);
             sprintf(timeData, "%d", getTime());
-            intTimes /= 2;
 
             /*Send data to serial terminal*/
             MSPrintf(EUSCI_A0_BASE, "Attempt %i, %i bytes, time: %i.", i, bufferSize, intTimes);
@@ -127,16 +126,13 @@ static unsigned long getTime(void)
 {
     unsigned long timetaken=0;
     timetaken = 0;
-    /* Number of times the interrupt occurred (1 interrupt = 1000 ticks)    */
-//    timetaken = intTimes * TICKPERIOD;
 
     /* Number of ticks (between 1 to 999) before the interrupt could occur */
     timetaken += Timer_A_getCounterValue(TIMER_A0_BASE);
 
     /* Clear Timer */
     Timer_A_clearTimer(TIMER_A0_BASE);
-
-//    timetaken /= 2;
+	
     return timetaken;
 }
 
