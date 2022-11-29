@@ -360,6 +360,9 @@ int main()
         }
     }
 
+    struct backToStart = {0,0};
+    AStar(currX, currY, backToStart);
+
     // raise and send mapping finished interrupt to comms
     // receive end point from comms
     printf("\n");
