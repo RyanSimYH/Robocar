@@ -27,3 +27,17 @@
 > Data will also be displayed in it when data is sent from Pico
 
 ### Setting up configuration for Pico to M5StickC Plus
+
+
+# Throughput/Latency Tests
+
+### MSP-UART Throughput
+- Import the zipped folder's contents onto CCS
+- Plug in the MSP through USB cable
+- Open a serial terminal to the MSP's COM port (115200 baud)
+- Flash the MSP
+
+### MSP-BLE Throughput
+
+
+### MSP-BLE Latency
