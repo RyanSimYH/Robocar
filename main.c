@@ -42,6 +42,55 @@
 #define R_TRIGGER_PIN 20
 #define R_ECHO_PIN 21
 
+// We are using pins 0 and 1, but see the GPIO function select table in the
+// datasheet for information on which other pins can be used.
+#define UART_TX_PIN_COMS 0
+#define UART_RX_PIN_COMS 1
+
+// Communications variables
+int previousIntegerData[5];
+static char *datapointNames[6] = {"speed", "turning",
+                                  "distanceWhole", "distanceDecimal",
+                                  "humpHeight", "barcode"};
+int currentIntegerData[5];
+#define SPEED 0   // round to a whole number
+#define TURNING 1 // 0 = straight, 1 = L, 2 = R
+#define DISTANCE_WHOLE 2
+#define DISTANCE_DECIMAL 3
+#define HUMP_HEIGHT 4
+#define BARCODE 5
+// don't do checking for barcode
+// navigation endpoint placeholder
+// navigation data placeholder
+
+char fullString[255] = "{"; // change to 512 if sending nav data too
+char buffer[255];
+
+const int maxDatapoints = 7; // including 1 for navigation
+
+// COmmunications
+// Function prototypes
+void getIntDatapoints(void);
+void comms(void);
+int barcodeAvailable(void);
+
+// RX interrupt handler for Pico to read from M5 to serial
+void on_uart_rx_m5()
+{
+    while (uart_is_readable(UART_ID))
+    {
+        printf("%c", uart_getc(UART_ID));
+        // char ch = uart_getc(UART_ID);
+        // strncat(buffer, &ch, 1);
+    }
+
+    // printf("Received something:\t");
+    // printf(buffer);
+    // memset(buffer, '\0', strlen(buffer));
+    printf("\n");
+}
+
+// COMMS END
 // Barcode Call Start
 static const uint32_t g_barcode_lookup_table[44] = {
     111221211, 211211112, 112211112, 212211111, 111221112,
@@ -668,6 +717,7 @@ int main()
             printf("%c", routeDirString[i]);
         }
 
+        comms();
         tight_loop_contents();
     }
 }
@@ -1145,4 +1195,71 @@ int GetXYPoint()
     int xyPoint = currX * 10 + currY;
     return xyPoint;
 }
+
 // Mapping & Navigation END
+
+// Comms BELOW
+
+void comms(void)
+{
+    int datapoints = 0; // number of datapoints in the message to be sent
+    int i = 0;          // for-loop counter
+    if (barcodeAvailable() == 1)
+    {
+        strcat(fullString, "\"");
+        strcat(fullString, datapointNames[BARCODE]);
+        strcat(fullString, "\": \"");
+        strcat(fullString, "barcode");
+        strcat(fullString, "\"");
+        // getBarcode()); //barcode is string, once getBarcode is called, barcode
+        // sideshould reset its barcodeAvail to not avail
+        datapoints++;
+    }
+
+    getIntDatapoints(); // fetch all the integer datapoints at once
+
+    for (i = 0; i < 5; i++)
+    {
+        // compare the integer datapoints with their previous values, send only
+        // those that have changed if(currentIntegerData[i] !=
+        // previousIntegerData[i]){ structure the message
+        if (datapoints != 0)
+        {
+            strcat(fullString, ", ");
+        }
+        strcat(fullString, "\"");
+        strcat(fullString, datapointNames[i]);
+        strcat(fullString, "\": \"");
+        char tempData[8];
+        sprintf(tempData, "%d", currentIntegerData[i]);
+        strcat(fullString, tempData);
+        strcat(fullString, "\"");
+
+        // store current value as prev value for the next round
+        previousIntegerData[i] = currentIntegerData[i];
+        datapoints++; // increment number of datapoints within the message
+                      // }
+    }
+
+    if (datapoints > 0)
+    {
+        strcat(fullString, "}"); // finish packaging the message since datapoints
+                                 // have been gathered
+        uart_puts(UART_ID, fullString);
+        sleep_ms(1500);
+        /* clear the message */
+        memset(fullString, '\0', strlen(fullString));
+        strcat(fullString, "{");
+    }
+}
+
+void getIntDatapoints(void)
+{
+    currentIntegerData[0] = 1; // getSpeed();
+    currentIntegerData[1] = 1; // getTurning();
+    currentIntegerData[2] = 1; // getDistWhole();
+    currentIntegerData[3] = 1; // getDistDecimal();
+    currentIntegerData[4] = 1; // getHump_Height();
+}
+
+int barcodeAvailable(void) { return 1; }
