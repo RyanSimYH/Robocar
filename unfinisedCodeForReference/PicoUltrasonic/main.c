@@ -23,7 +23,6 @@ float   measure_distance(ECHO_PIN,TRIGGER_PIN){
     sleep_ms(3);                               
     gpio_put(TRIGGER_PIN, false);               // Switch the trigger low again to let the SR04 send the pulse
 	/*
-		The echo pin woutputs a pulse between 150 micro-seconds and 25 mili-seconds, or if no object is found, it will send a 38 ms pulse. 
 		speed of sound is 343 meters per second.
 		speed = distance travelled / time taken
 		so, distance = (speed * time taken)/2 -- Divide by 2 because echo includes to target and back
