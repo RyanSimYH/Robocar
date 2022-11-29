@@ -27,21 +27,17 @@
 // Communications variables
 int previousIntegerData[5];
 static char *datapointNames[6] = {"speed",         "turning",
-                                  "distanceWhole", "distanceDecimal",
-                                  "humpHeight",    "barcode"};
+                                  "distanceWhole",
+                                  "humpHeight", "coordinates" ,  "barcode"};
 int currentIntegerData[5];
-#define SPEED 0    // round to a whole number
-#define TURNING 1  // 0 = straight, 1 = L, 2 = R
-#define DISTANCE_WHOLE 2
-#define DISTANCE_DECIMAL 3
-#define HUMP_HEIGHT 4
-#define BARCODE 5
 // don't do checking for barcode
 // navigation endpoint placeholder
 // navigation data placeholder
 
 char fullString[255] = "{";  // change to 512 if sending nav data too
 char buffer[255];
+
+int endpointCoord = 0;
 
 const int maxDatapoints = 7;  // including 1 for navigation
 
@@ -52,10 +48,15 @@ int barcodeAvailable(void);
 
 // RX interrupt handler for Pico to read from M5 to serial
 void on_uart_rx() {
+  int i = 0;
   while (uart_is_readable(UART_ID)) {
     printf("%c", uart_getc(UART_ID));
-    // char ch = uart_getc(UART_ID);
-    // strncat(buffer, &ch, 1);
+    if (i == 0) {
+      endpointCoord = (uart_getc(UART_ID) - '0') * 10;
+      i++;
+    } else {
+      endpointCoord += (uart_getc(UART_ID) - '0');
+    }
   }
 
   // printf("Received something:\t");
@@ -112,12 +113,10 @@ void comms(void) {
   int i = 0;           // for-loop counter
   if (barcodeAvailable() == 1) {
     strcat(fullString, "\"");
-    strcat(fullString, datapointNames[BARCODE]);
+    strcat(fullString, datapointNames[5]);
     strcat(fullString, "\": \"");
-    strcat(fullString, "barcode");
+    strcat(fullString, barcodeReading);
     strcat(fullString, "\"");
-    // getBarcode()); //barcode is string, once getBarcode is called, barcode
-    // sideshould reset its barcodeAvail to not avail
     datapoints++;
   }
 
@@ -125,8 +124,9 @@ void comms(void) {
 
   for (i = 0; i < 5; i++) {
     // compare the integer datapoints with their previous values, send only
-    // those that have changed if(currentIntegerData[i] !=
-    // previousIntegerData[i]){ structure the message
+    // those that have changed 
+    if(currentIntegerData[i] != previousIntegerData[i])
+    {
     if (datapoints != 0) {
       strcat(fullString, ", ");
     }
@@ -138,10 +138,22 @@ void comms(void) {
     strcat(fullString, tempData);
     strcat(fullString, "\"");
 
+  if (datapoints != 0) {
+      strcat(fullString, ", ");
+    }
+    if(nav_dir != ""){
+      strcat(fullString, "\"");
+      strcat(fullString, datapointNames[i]);
+      strcat(fullString, "\": \"");
+      strcat(fullString, nav_dir);
+      strcat(fullString, "\"");
+    }
+
     // store current value as prev value for the next round
     previousIntegerData[i] = currentIntegerData[i];
     datapoints++;  // increment number of datapoints within the message
                    // }
+    }
   }
 
   if (datapoints > 0) {
@@ -155,12 +167,14 @@ void comms(void) {
   }
 }
 
+//To extract the data 
 void getIntDatapoints(void) {
-  currentIntegerData[0] = 1;  // getSpeed();
-  currentIntegerData[1] = 1;  // getTurning();
-  currentIntegerData[2] = 1;  // getDistWhole();
-  currentIntegerData[3] = 1;  // getDistDecimal();
-  currentIntegerData[4] = 1;  // getHump_Height();
+  currentIntegerData[0] = getSpeed(); //Speed
+  currentIntegerData[1] = getTurning(); //Turning
+  currentIntegerData[2] = getDistance(); //Distance
+  currentIntegerData[3] = getHumpHeight(); //HumpHeight
+  currentIntegerData[4] = getCoordinates(); //Coordinates
 }
 
 int barcodeAvailable(void) { return 1; }
+
