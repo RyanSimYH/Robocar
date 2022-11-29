@@ -9,3 +9,18 @@
 7. Open the dashboard tab, change the theme colours
  <img width="193" alt="image" src="https://user-images.githubusercontent.com/98366701/204532769-2289a953-cb5b-4c71-a761-82f712faf731.png">
 8. Open localhost:1880/ui
+
+
+## Building Pico Code with Working Printf
+
+> In CMakeLists.txt
+>
+> Change all `uart_advanced` to the name of the file
+
+
+### Setting up configuration for Pico to HC05
+
+![image](https://user-images.githubusercontent.com/81850188/204531729-273f0c6a-5aab-4321-bb59-8d77b4f3654a.png)
+
+> Install tera terminal to pair and connect HC05 with master device (eg. laptop)
+> Data will also be displayed in it when data is sent from Pico
