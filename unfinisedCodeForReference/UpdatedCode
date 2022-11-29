@@ -147,7 +147,7 @@ void comms(void) {
   if (datapoints > 0) {
     strcat(fullString, "}");  // finish packaging the message since datapoints
                               // have been gathered
-    // uart_puts(UART_ID, fullString);
+    uart_puts(UART_ID, fullString);
     sleep_ms(1500);
     /* clear the message */
     memset(fullString, '\0', strlen(fullString));
