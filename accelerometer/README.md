@@ -1,11 +1,11 @@
 # Accelerometer sensor
 
-Reads the X, Y and Z axis of the car and display readings on terminal. 
+Reads the X, Y and Z axis of the car and display readings 
 
 ## Configuration
 MPU6050 connected to Pico
 
-###### MPU6050 --> Pico
+### MPU6050 --> Pico
 * VCC to 3V3(OUT)
 * GND to GND
 * SCL to GP19
