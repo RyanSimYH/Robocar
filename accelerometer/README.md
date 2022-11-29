@@ -6,10 +6,10 @@ Reads the X, Y and Z axis of the car and display readings on terminal.
 MPU6050 connected to Pico
 
 ###### MPU6050 --> Pico
-VCC to 3V3(OUT)
-GND to GND
-SCL to GP19
-SDA to GP18
+* VCC to 3V3(OUT)
+* GND to GND
+* SCL to GP19
+* SDA to GP18
 
 ## How to use
 * Copy CMakeLists.txt, pico_sdk_import.cmake, MPU6050.h and main.c files into visual studio code
