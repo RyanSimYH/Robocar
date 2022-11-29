@@ -14,7 +14,7 @@ void MPU6050_Reset()
 }
 
 //Get readings for the accelerometer
-void MPU6050_ReadData(int16_t accelerometer[3], int16_t gyro[3])
+void MPU6050_ReadData(int16_t accelerometer[3])
 {
     uint8_t buffer[6]; //Store readings
     // reading the accelerometer data
@@ -28,13 +28,13 @@ void MPU6050_ReadData(int16_t accelerometer[3], int16_t gyro[3])
     accelerometer[2] = (buffer[4] << 8) | buffer[5]; //z axis
 
     //Gyro data    
-   reg = 0x43; //Register for gyro
-    i2c_write_blocking(I2C_PORT, MPU6050_ADDRESS, &reg, sizeof(reg), false ); //Pass the register to MPU6050
-    i2c_read_blocking(I2C_PORT, MPU6050_ADDRESS, buffer, sizeof(buffer), false ); //Read the data from MPU6050
+    // reg = 0x43; //Register for gyro
+    // i2c_write_blocking(I2C_PORT, MPU6050_ADDRESS, &reg, sizeof(reg), false ); //Pass the register to MPU6050
+    // i2c_read_blocking(I2C_PORT, MPU6050_ADDRESS, buffer, sizeof(buffer), false ); //Read the data from MPU6050
 
-    gyro[0] = (buffer[0] << 8) | buffer[1];
-    gyro[1] = (buffer[2] << 8) | buffer[3];
-    gyro[2] = (buffer[4] << 8) | buffer[5];
+    // gyro[0] = (buffer[0] << 8) | buffer[1];
+    // gyro[1] = (buffer[2] << 8) | buffer[3];
+    // gyro[2] = (buffer[4] << 8) | buffer[5];
 
     
 }
