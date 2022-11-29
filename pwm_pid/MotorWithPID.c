@@ -30,8 +30,6 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * --/COPYRIGHT--*/
 /*******************************************************************************
-
-
  *
  *                MSP432P401
  *             ------------------
@@ -115,6 +113,7 @@ int main(void)
 
     /* Selecting P1.2 and P1.3 in UART mode */
    GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN2 | GPIO_PIN3, GPIO_PRIMARY_MODULE_FUNCTION);
+   GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3 , GPIO_PRIMARY_MODULE_FUNCTION);
 
    /* Configuring UART Module */
    UART_initModule(EUSCI_A2_BASE, &uartConfig);
@@ -170,7 +169,6 @@ int main(void)
     Interrupt_enableInterrupt(INT_TA1_0);
     Timer_A_startCounter(TIMER_A1_BASE, TIMER_A_UP_MODE);
 
-    GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3, GPIO_PIN2 | GPIO_PIN3 , GPIO_PRIMARY_MODULE_FUNCTION);
     UART_enableInterrupt(EUSCI_A2_BASE, EUSCI_A_UART_RECEIVE_INTERRUPT);
     Interrupt_enableInterrupt(INT_EUSCIA2);
     Interrupt_enableMaster();
