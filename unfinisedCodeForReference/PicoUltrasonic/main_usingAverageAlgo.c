@@ -10,9 +10,7 @@
 * 
 */
 
-// #ifndef PICO_DEFAULT_LED_PIN
-// #error blink example requires a board with a regular LED
-// #endif
+//https://github.com/vipullal-github/HC-SR04_UltrasonicSensor
 uint led_pin = 25;
 uint TRIGGER_PIN = 17;
 uint ECHO_PIN = 16;
@@ -21,89 +19,56 @@ uint ECHO_PIN = 16;
 // -----------------------------------------------------------
 float   measure_distance(){
     float   distance_cm = 0.0;
-
-    gpio_set_input_enabled( ECHO_PIN, true );
-
-    gpio_put( TRIGGER_PIN, false ); // make sure that the pin is low
-    sleep_ms(2);                // wait a bit to let things stabalize
-    uint echo_pin = gpio_get( ECHO_PIN);
-	// printf("\nPulsed the pin high echo pin is %d", echo_pin );
-    
-    gpio_put( TRIGGER_PIN, true);  // go high
-    sleep_ms( 10 );             // sleep 3 mili seconds
-    uint tp1 = gpio_get( TRIGGER_PIN);
-    // printf("\nPulsed the pin trigg 1 pin is %d", tp1 );
-
-    gpio_put( TRIGGER_PIN, false);  // Switch the trigger low again to let the SR04 send the pulse
-    uint tp = gpio_get( TRIGGER_PIN);
-    // printf("\nPulsed the pin trigg pin is %d", tp );
-
+    gpio_set_input_enabled( ECHO_PIN, true );   //Enable input for the echo pin
+    gpio_put(TRIGGER_PIN, false);               // make sure that the pin is low
+    sleep_ms(2);                                // wait 
+    gpio_put(TRIGGER_PIN, true);                // go high for 3 ms
+    sleep_ms(3);                               
+    gpio_put(TRIGGER_PIN, false);               // Switch the trigger low again to let the SR04 send the pulse
 	/*
-		The echo pin woutputs a pulse between 150 micro-seconds and 25 mili-seconds, or if no object is found, it will send a 38 ms pulse. 
-		speed of sound is 343 meters per second. This would depend upon the elevation and hummidity, but 
-		sufficiently accurate for our application. 
-
+		speed of sound is 343 meters per second.
 		speed = distance travelled / time taken
-		
-		so, distance = (speed * time taken)/2 -- Divide by 2 because we are listening to the echo
-		
+		so, distance = (speed * time taken)/2 -- Divide by 2 because echo includes to target and back
 		Now, speed of sound is 343 meters/second, whch is 3.43 centimeters per second, which is
 		3.43/ 1000000 = 0.0343 cm/microsecond. 
-		
-		
-	// */
-    absolute_time_t  listen_start_time = get_absolute_time();
-    // printf("\nTest");
-    absolute_time_t  max_wait_time  = delayed_by_ms( listen_start_time, 30 );  // No point waiting more than 30 Mili sec. 
-	// printf("\nTest");
-    // printf("\nTest time %llu ",listen_start_time);
-    // printf("\nTest time2 %llu ",max_wait_time);
-    do{
-        absolute_time_t  t_now = get_absolute_time();
-        int64_t diff = absolute_time_diff_us( max_wait_time,t_now);
-        // printf("\nT diff %d", diff);
-        if( diff>0 ){
-            // printf("T diff %d", diff);
+	 */
+    absolute_time_t  listen_start_time = get_absolute_time(); // initiate listening
+    absolute_time_t  max_wait_time  = delayed_by_ms( listen_start_time, 30 );  // Stop waiting more than 30ms. 
+	do{
+        absolute_time_t  t_now = get_absolute_time(); // get the time now
+        int64_t diff = absolute_time_diff_us( max_wait_time,t_now); //time difference between max waiting and current time
+        if( diff>0 ){ //means more than 30ms
             break;
         }
-        echo_pin = gpio_get(ECHO_PIN);
-        // uint echo_pin = gpio_get( ECHO_PIN);
-	    // printf("\nPulsed the pin high echo pin is %d", echo_pin );
-        if( echo_pin != 0 ){   // We got an echo!
-            absolute_time_t  first_echo_time = t_now;
-            printf("\n the pin went high ");
-            while( echo_pin == 1 && diff<0 ){
-                echo_pin = gpio_get( ECHO_PIN );
-                t_now = get_absolute_time();
+        echo_pin = gpio_get(ECHO_PIN); // get input from the echo pin
+
+        if( echo_pin != 0 ){   // Recieve an echo!
+            absolute_time_t  first_echo_time = t_now; // start timing echo
+            while( echo_pin == 1 && diff<0 ){ //while echo pin is high and timing less than 30ms
+                echo_pin = gpio_get( ECHO_PIN ); //get input from echo pin
+                t_now = get_absolute_time(); // update the t_now
             }
-        printf("\n pin is at %d", echo_pin );
-
-
-      if( echo_pin == 1 ){
-        break;  // will return 0 cm.
-      }
-    //   printf("\nStart %llu ", listen_start_time );
-    //   printf( "\nend %llu ", t_now );
-            int64_t pulse_high_time = absolute_time_diff_us( first_echo_time, t_now );
-      float pulse_high_time_float = (float) pulse_high_time;
-            printf("\n High Time %f ", pulse_high_time_float ); 
-            distance_cm = pulse_high_time_float * 0.01715; //pulse_high_time_float / 58.0 ;
-            break;
+            if( echo_pin == 1 ){ // if the timing is more than 30 ms but it is still on high
+                break;  // will return 0 cm.
+                }
+    
+        int64_t pulse_high_time = absolute_time_diff_us( first_echo_time, t_now ); // find difference between first echo to now, returns int64_t 
+        float pulse_high_time_float = (float) pulse_high_time; //convert to float
+            
+        distance_cm = pulse_high_time_float * 0.01715; //time taken *0.5 *speed of sound;
+        break;
         }
     }
     while( true );
-    gpio_set_input_enabled( ECHO_PIN, false );
+    gpio_set_input_enabled( ECHO_PIN, false );//disable the input for echo pin  
     return distance_cm;
 }
-
-
-
 
 // ---------------------------------------------------------------
 int main() {
     
     stdio_init_all();
-    // setup the trigger pin in putput mode and echo pin to input mode
+    // setup the trigger pin in output mode and echo pin to input mode
     gpio_init( TRIGGER_PIN );
     gpio_init( ECHO_PIN );
     gpio_set_dir( TRIGGER_PIN, GPIO_OUT );
@@ -112,34 +77,25 @@ int main() {
 
     gpio_init(led_pin);
     gpio_set_dir( led_pin, GPIO_OUT);
-    // float bufferDist[10]; //collects 10 reading
     int count =0;
     float sumDist=0;
     float average=0;
     while (true) {
-        // flash the on-board LED to show that we are still alive. 
-        //reads distance every 0.1 sec
-        gpio_put( led_pin, true);
-        //  printf("Blinking On!\r\n");
+        // Blinks once per reading 
+        //reads distance every 0.02 sec
+        gpio_put(led_pin, true);
         sleep_ms(10);
-        //  printf("Blinking Off!\r\n");
-        gpio_put( led_pin, false);
+        gpio_put(led_pin, false);
         sleep_ms(10);
-        printf("Measuring!!\r\n");
 
         float  distance = measure_distance();
-        sumDist+=distance;
-        
-        count++; 
-        if (count ==10){ // every 0.1 sec after 10 readings
-            
-            average=sumDist/10;  
-            sumDist=0;     
-            count=0;
+        sumDist+=distance; // add the readings together
+        count++;  // increase count
+        if (count ==10){ //after 10 readings
+            average=sumDist/10;//average of the 10 readings  
+            sumDist=0; // reset the sum    
+            count=0; // reset the sum
         }
         printf("\nClosest object is %5.2f cm away\n", average );
-       
-
-    
 }
 }
