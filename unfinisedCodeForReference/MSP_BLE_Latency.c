@@ -1,3 +1,9 @@
+/**
+ * UART APIs from: https://github.com/amartinezacosta/MSP432-HC-05
+ * MSPrintf, MSPGets, etc.
+ *
+*/
+
 #include <Hardware/CS_Driver.h>
 #include <Devices/MSPIO.h>
 #include <string.h>
