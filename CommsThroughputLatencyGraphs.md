@@ -4,12 +4,12 @@
 - Each length of char array was sent 5 times, and we used the average time taken for each array length for our plotting
 - Time taken for each attempt is printed to the serial terminal
 - Time taken refers to the time for the UART transfer function to be completed (recorded via timerA)
-![image](https://user-images.githubusercontent.com/98366701/204077869-77825e93-bb2d-47c6-92d2-1cfe3ff21543.png)
+![image](https://user-images.githubusercontent.com/98366701/204511564-21e0773e-a55a-49df-aff9-028a8a1c39ff.png)
 
-Based on the line of best fit, **y = 0.1731x - 0.0001**:
+Based on the line of best fit, **y = 0.0867x - 0.0001**:
   If y = 1 second, amount of data we can transmit (x) is
-    (y + 0.0001)/0.1731 = 1.0001/0.1731 = 5.778
-Therefore, the throughput of MSP-UART transmissions, based on our configurations, is 5.778kBps
+    (y + 0.0001)/0.0867 = 1.0001/0.0867 = 11.535
+Therefore, the throughput of MSP-UART transmissions, based on our configurations, is 11.535kBps
 
 2. Throughput: Pico-M5StickC-UART Transmissions
 // Relevant settings: 115200 baud, LSB first, no parity, one stop bit
