@@ -28,6 +28,10 @@
 
 ### Setting up configuration for Pico to M5StickC Plus
 
+![image](https://user-images.githubusercontent.com/81850188/204536311-3b34b64c-e202-4b06-9c37-48116d022dbf.png)
+
+> Head to https://flow.m5stack.com/ and connect the m5 and current device (eg. laptop) to the same network.
+> Import the m5f file and run.
 
 # Throughput/Latency Tests
 
@@ -37,7 +41,10 @@
 - Open a serial terminal to the MSP's COM port (115200 baud)
 - Flash the MSP
 
-### MSP-BLE Throughput
-
-
-### MSP-BLE Latency
+### MSP-BLE Throughput & Latency
+- Import the MSP_BLE_Performance zipped folder's contents onto CCS
+- Plug in the MSP through USB cable
+- Open a serial terminal to the MSP's COM port (115200 baud)
+- Open Tera Terminal and pair & connect to bluetooth port
+- *For Latency Only* connect the EN pin to +5V to enable command mode
+- Flash the MSP
