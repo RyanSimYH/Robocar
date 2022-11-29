@@ -61,3 +61,7 @@
 - Open Tera Terminal and pair & connect to bluetooth port
 - **For Latency Only** connect the EN pin to +5V to enable command mode
 - Flash the MSP
+
+
+# Flowchart
+![communications-Page-2 drawio (1)](https://user-images.githubusercontent.com/94168656/204555288-5b3d692f-0be9-4ac0-bbdc-375b3ee842ce.png)
