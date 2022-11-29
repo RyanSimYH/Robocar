@@ -46,5 +46,5 @@
 - Plug in the MSP through USB cable
 - Open a serial terminal to the MSP's COM port (115200 baud)
 - Open Tera Terminal and pair & connect to bluetooth port
-- *For Latency Only* connect the EN pin to +5V to enable command mode
+- **For Latency Only** connect the EN pin to +5V to enable command mode
 - Flash the MSP
