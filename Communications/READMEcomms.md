@@ -23,4 +23,7 @@
 ![image](https://user-images.githubusercontent.com/81850188/204531729-273f0c6a-5aab-4321-bb59-8d77b4f3654a.png)
 
 > Install tera terminal to pair and connect HC05 with master device (eg. laptop)
+> 
 > Data will also be displayed in it when data is sent from Pico
+
+### Setting up configuration for Pico to M5StickC Plus
