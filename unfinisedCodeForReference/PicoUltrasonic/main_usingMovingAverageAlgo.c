@@ -8,7 +8,7 @@
 uint led_pin = 25;
 uint C_TRIGGER_PIN = 17;
 uint C_ECHO_PIN = 16;
-uint L_TRIGGER_PIN = 22//18 was used by accelerometer;
+uint L_TRIGGER_PIN = 22;//18 was used by accelerometer;
 uint L_ECHO_PIN = 19;
 uint R_TRIGGER_PIN = 20;
 uint R_ECHO_PIN = 21;
