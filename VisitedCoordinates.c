@@ -83,8 +83,8 @@ short currY;
 
 int main()
 {
-    short leftSensorDistance = 0;    // test
-    short rightSensorDistance = 100; // test
+    short leftSensorDistance = 100;    // test
+    short rightSensorDistance = 0; // test
     short forwardSensorDistance;
 
     char northInput;
@@ -115,7 +115,7 @@ int main()
         direction += 4;
     }
 
-    printf("%d", direction);
+    //printf("%d", direction);
 
     if (leftSensorDistance > rightSensorDistance)
     {
@@ -157,11 +157,11 @@ int main()
     {
         printf("\nVisited points: %d",visitedPoints);
         printf("\nNext point to travel to: (%d, %d): ", currX, currY);
-        for (short i = 0; i < 20; i++)
-        {
-           printf("(%d, %d)  ", arr[i].x, arr[i].y);        
-        }
-           printf("\n");
+        // for (short i = 0; i < 20; i++)
+        // {
+        //    printf("(%d, %d)  ", arr[i].x, arr[i].y);        
+        // }
+            printf("\n");
     for (short j = 0; j < xPoints; j++)
     { 
         printf(((graphArray[j][0].directions | NORTHCHECK) != ACCESSIBLE) ? " ___ " : "    ");
@@ -178,6 +178,7 @@ int main()
 
         printf(((graphArray[xPoints - 1][i].directions | EASTCHECK) != ACCESSIBLE) ? "|" : " ");
     }
+     printf("\n");
         if (verifyNodeVistited(currX, currY) == true)
         {
             if (graphArray[currX][currY].routes != 0)
@@ -518,17 +519,17 @@ struct Point getNodeWithUnvisitedRoute()
 
 bool verifyNodeVistited(short currX, short currY)
 {
-    printf("Verifying: (%d, %d)", currX,currY);
+    //printf("Verifying: (%d, %d)", currX,currY);
     // 20 is the size of arr
     for (short i = 0; i < visitedPoints; i++)
     {
         if (arr[i].x == currX && arr[i].y == currY)
         {
-            printf("true");
+            //printf("true");
             return true;
         }
     }
-    printf("false");
+    //printf("false");
     return false;
 }
 
@@ -560,7 +561,7 @@ void AStar(short currX, short currY, struct Point endPoint){
                 neighbourNode[neighbours] = pointToAdd;             // Add the north node of the current point to the neighbours array
                 neighbours++;                                       // Increment the number of neighbours
                 graphArray[pointToAdd.x][pointToAdd.y].checked = 3; // Set the current point as checked as it will be checked for its weight, prevents point from being checked again
-                printf("\nAdd neighbour north: (%i, %i)", pointToAdd.x, pointToAdd.y);
+              //  printf("\nAdd neighbour north: (%i, %i)", pointToAdd.x, pointToAdd.y);
             }
         }
 
@@ -574,7 +575,7 @@ void AStar(short currX, short currY, struct Point endPoint){
                 neighbourNode[neighbours] = pointToAdd;             // Add the east node of the current point to the neighbours array
                 neighbours++;                                       // Increment the number of neighbours
                 graphArray[pointToAdd.x][pointToAdd.y].checked = 3; // Set the current point as checked as it will be checked for its weight, prevents point from being checked again
-                printf("\nAdd neighbour east: (%i, %i)", pointToAdd.x, pointToAdd.y);
+                //printf("\nAdd neighbour east: (%i, %i)", pointToAdd.x, pointToAdd.y);
             }
         }
 
@@ -588,7 +589,7 @@ void AStar(short currX, short currY, struct Point endPoint){
                 neighbourNode[neighbours] = pointToAdd;             // Add the south node of the current point to the neighbours array
                 neighbours++;                                       // Increment the number of neighbours
                 graphArray[pointToAdd.x][pointToAdd.y].checked = 3; // Set the current point as checked as it will be checked for its weight, prevents point from being checked again
-                printf("\nAdd neighbour south: (%i, %i)", pointToAdd.x, pointToAdd.y);
+                //printf("\nAdd neighbour south: (%i, %i)", pointToAdd.x, pointToAdd.y);
             }
         }
 
@@ -602,7 +603,7 @@ void AStar(short currX, short currY, struct Point endPoint){
                 neighbourNode[neighbours] = pointToAdd;             // Add the west node of the current point to the neighbours array
                 neighbours++;                                       // Increment the number of neighbours
                 graphArray[pointToAdd.x][pointToAdd.y].checked = 3; // Set the current point as checked as it will be checked for its weight, prevents point from being checked again
-                printf("\nAdd neighbour west: (%i, %i)\n", pointToAdd.x, pointToAdd.y);
+                //printf("\nAdd neighbour west: (%i, %i)\n", pointToAdd.x, pointToAdd.y);
             }
         }
 
@@ -628,10 +629,10 @@ void AStar(short currX, short currY, struct Point endPoint){
         paths++;                           // Increments the number of paths
 
         //          (For checking)
-        for (short i = paths - 1; i >= 0; i--)
-        {
-            printf("\nPath %i, travelled: (%i, %i) from: (%i, %i)", i, pathTravelled[i].nodeName.x, pathTravelled[i].nodeName.y, pathTravelled[i].startNode.x, pathTravelled[i].startNode.y);
-        }
+        // for (short i = paths - 1; i >= 0; i--)
+        // {
+        //     printf("\nPath %i, travelled: (%i, %i) from: (%i, %i)", i, pathTravelled[i].nodeName.x, pathTravelled[i].nodeName.y, pathTravelled[i].startNode.x, pathTravelled[i].startNode.y);
+        // }
     }
     
     // After the goal has been reached
