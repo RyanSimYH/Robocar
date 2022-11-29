@@ -58,6 +58,9 @@ void AStar(short currX, short currY, struct Point endPoint);
 short CheckIsPoint(struct Point currPoint, struct Point endPoint);
 void SortQueue(struct QueueItem queue[], short end);
 void Swapper(struct QueueItem queue[], short currIndex);
+bool CheckIfBlocked();
+int GetXYPoint();
+
 
 char compass = 'N'; // default North
 short directionCount = 0;
@@ -741,4 +744,16 @@ void Swapper(struct QueueItem queue[], short currIndex) // To swap the values ar
     struct QueueItem temp = queue[currIndex]; // Saves the value of the unsorted item into temp
     queue[currIndex] = queue[currIndex - 1];
     queue[currIndex - 1] = temp;
+}
+
+bool CheckIfBlocked()
+{
+    //take in ultrasonic
+    
+}
+
+int GetXYPoint()
+{
+    int xyPoint = currX *10 + currY;
+    return xyPoint;
 }
