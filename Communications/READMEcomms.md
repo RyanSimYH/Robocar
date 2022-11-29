@@ -10,6 +10,24 @@
  <img width="193" alt="image" src="https://user-images.githubusercontent.com/98366701/204532769-2289a953-cb5b-4c71-a761-82f712faf731.png">
 8. Open localhost:1880/ui
 
+# Setting up
+
+### Configuration for MSP to M5StickCPlus
+
+![image](https://user-images.githubusercontent.com/81850188/204540050-3f38715e-acb7-423a-abe4-e4a60e22a098.png)
+
+> Head to https://flow.m5stack.com/ and connect the m5 and current device (eg. laptop) to the same network.
+> Import the m5f file and run.
+
+
+### Configuration for MSP to HC05
+
+![image](https://user-images.githubusercontent.com/81850188/204540998-6eafab4a-1b63-44eb-80e6-e75d338e9a2d.png)
+
+> Install tera terminal to pair and connect HC05 with master device (eg. laptop)
+> 
+> Data will also be displayed in it when data is sent from Pico
+
 
 ## Building Pico Code with Working Printf
 
@@ -22,16 +40,11 @@
 
 ![image](https://user-images.githubusercontent.com/81850188/204531729-273f0c6a-5aab-4321-bb59-8d77b4f3654a.png)
 
-> Install tera terminal to pair and connect HC05 with master device (eg. laptop)
-> 
-> Data will also be displayed in it when data is sent from Pico
 
 ### Setting up configuration for Pico to M5StickC Plus
 
 ![image](https://user-images.githubusercontent.com/81850188/204536311-3b34b64c-e202-4b06-9c37-48116d022dbf.png)
 
-> Head to https://flow.m5stack.com/ and connect the m5 and current device (eg. laptop) to the same network.
-> Import the m5f file and run.
 
 # Throughput/Latency Tests
 
