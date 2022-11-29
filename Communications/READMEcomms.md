@@ -12,7 +12,7 @@
 
 # Setting up
 
-### Configuration for MSP to M5StickCPlus
+## Configuration for MSP to M5StickCPlus
 
 ![image](https://user-images.githubusercontent.com/81850188/204540050-3f38715e-acb7-423a-abe4-e4a60e22a098.png)
 
@@ -20,7 +20,7 @@
 > Import the m5f file and run.
 
 
-### Configuration for MSP to HC05
+## Configuration for MSP to HC05
 
 ![image](https://user-images.githubusercontent.com/81850188/204540998-6eafab4a-1b63-44eb-80e6-e75d338e9a2d.png)
 
@@ -29,19 +29,19 @@
 > Data will also be displayed in it when data is sent from Pico
 
 
-## Building Pico Code with Working Printf
+### Building Pico Code with Working Printf
 
 > In CMakeLists.txt
 >
 > Change all `uart_advanced` to the name of the file
 
 
-### Setting up configuration for Pico to HC05
+## Setting up configuration for Pico to HC05
 
 ![image](https://user-images.githubusercontent.com/81850188/204531729-273f0c6a-5aab-4321-bb59-8d77b4f3654a.png)
 
 
-### Setting up configuration for Pico to M5StickC Plus
+## Setting up configuration for Pico to M5StickC Plus
 
 ![image](https://user-images.githubusercontent.com/81850188/204536311-3b34b64c-e202-4b06-9c37-48116d022dbf.png)
 
